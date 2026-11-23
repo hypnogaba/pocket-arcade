@@ -1,10 +1,16 @@
 # Pocket Arcade
 
-A Game Boy and Game Boy Color player for the Solana BP26 badge, with 30 free
-games inside and room for your own on the microSD card.
+A Game Boy and Game Boy Color player for the Solana BP26 badge, with 16 free
+games inside, an original tank game written for the badge, and room for your
+own on the microSD card.
 
-- **30 games, one install.** Shooters, platformers, puzzles, a city builder, a
-  roguelike, card games. All free software or freely licensed: see
+- **Tank Siege**, made for Pocket Arcade: guard your base from 20 enemy tanks
+  a stage. Bricks break, steel holds, water stops tanks, trees hide them.
+  14 stages drawn by hand, then they come round again, harder. Flashing tanks
+  drop bonuses: a star (faster, then double, then steel-breaking shots), a
+  helmet, a clock, a shovel (steel round the base), a grenade, a tank.
+- **16 games, one install.** Platformers, shooters, puzzles, a city builder,
+  a roguelike, racing. All free software or freely licensed: see
   [CREDITS.md](CREDITS.md).
 - **A preview of every game** in the list, taken from the game itself.
 - **Your own games.** Copy `.gb` or `.gbc` files you own to
@@ -35,7 +41,8 @@ The badge has no speaker, so the games are silent.
 | File | What |
 |---|---|
 | `app/main.c` | The badge side: the list, loading, frames, keys, menu, saves, LEDs |
-| `app/emu.c` | Walnut-CGB behind a small API with no badge calls: palettes, snapshots, the joypad interrupt |
+| `app/emu.c` | Walnut-CGB behind a small API with no badge calls: palettes, snapshots, the joypad interrupt; a native game behind the same API |
+| `app/tanks.c` | Tank Siege: draws a 160 x 144 picture like a Game Boy game, so the app scales, saves and snapshots it the same way. Its whole state is one struct with no pointers, so a snapshot is a copy |
 | `app/pack.c` | The bundled games: an index, then each game's 16 KB banks deflated one by one, and a preview |
 | `app/walnut/` | The core, comments stripped to fit the store's 1 MB (made from `vendor/walnut/`) |
 | `vendor/walnut/` | Walnut-CGB 1.2.4 from the Solana OS C SDK, with one fix marked "Pocket Arcade" (below) |
@@ -66,6 +73,8 @@ python3 tools/fetch_roms.py          # the games, checked against games.json
 python3 tools/build_pack.py          # app/games/
 python3 tools/check_core.py          # app/walnut/ from vendor/, same frames in every game
 python3 tools/credits.py             # CREDITS.md
+cc -O1 -fsanitize=address,undefined -Iapp tools/tank_test.c app/tanks.c -o build/tank_test
+build/tank_test build/tanks          # Tank Siege's tests, and the preview picture
 tools/sim/run_all.sh                 # build with the store's toolchain, run the simulator scripts
 ```
 
@@ -73,7 +82,8 @@ tools/sim/run_all.sh                 # build with the store's toolchain, run the
 |---|---|
 | `tools/harness.c` + `tools/survey.py` | Every game boots in the core, its picture moves, an estimate of its speed on the badge |
 | `tools/test_pack.c` | Every game unpacks to its exact ROM and CRC, previews decode, a snapshot loads back to the same next frame, a damaged pack is refused |
-| `tools/check_core.py` | The stripped core draws the same frames as the original in all 30 games |
+| `tools/check_core.py` | The stripped core draws the same frames as the original in every bundled game |
+| `tools/tank_test.c` | Tank Siege on a computer with sanitizers: every stage lets the enemies reach the base and the player reach the top; random games with the whole state checked every frame; 32 stages cleared in a row with a cheat; a defending bot wins part of its games on the first stages (the enemies were tuned with it); a snapshot plays on frame for frame the same |
 | `tools/sim/host.ts` | The whole app (the store's `app.wasm`) against a simulated badge: real files, saves, relaunch after HOME, a scripted flow, broken card files, and 5 random runs of 1,500 steps each |
 
 `tools/sim/host.ts` is made from the SDK's `sdk/c/tests/mock-host.ts` (MIT,

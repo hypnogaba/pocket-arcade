@@ -16,6 +16,8 @@ def main():
     os.makedirs(os.path.join(ROOT, 'roms'), exist_ok=True)
     bad = 0
     for g in meta['games']:
+        if g.get('native'):
+            continue                    # written for the badge: no ROM
         dst = os.path.join(ROOT, 'roms', g['rom'])
         if not os.path.exists(dst):
             entry = json.load(urllib.request.urlopen(BASE + g['slug'] + '/game.json'))

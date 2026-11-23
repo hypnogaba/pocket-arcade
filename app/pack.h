@@ -15,6 +15,7 @@ typedef struct {
 } pack_game;
 
 #define PACK_CGB 1
+#define PACK_NATIVE 2      // a game written for the badge (no ROM, banks 0): only the preview is in the pack
 
 // Read len bytes at off of pack file n into dst; bytes read, or < 0.
 typedef int32_t (*pack_read_fn)(void *ud, int n, uint32_t off, void *dst, uint32_t len);

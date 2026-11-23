@@ -1,5 +1,6 @@
 // Pocket Arcade: a Game Boy and Game Boy Color player for the Solana BP26
-// badge, with 30 free games inside and room for your own on the card.
+// badge, with 16 free games inside, Tank Siege (tanks.c, written for the
+// badge) and room for your own on the card.
 //
 // The machine is Walnut-CGB (walnut/, MIT) behind emu.c; the bundled games
 // come from games/ (pack.c, made by tools/build_pack.py); this file is the
@@ -17,6 +18,7 @@
 #include "badge.h"
 #include "emu.h"
 #include "pack.h"
+#include "tanks.h"
 
 #define FRAME_US 16743          // 70224 clocks at 4.194304 MHz
 #define NAME_MAX_ 64
@@ -47,6 +49,7 @@ static struct {
     char title[NAME_MAX_];
     uint32_t crc;
     int paged;
+    int native;              // a game written for the badge (tanks.c), not a cartridge
 } cur;
 
 static uint8_t *rom, *cache;
@@ -351,10 +354,20 @@ static void apply_palette(void)
     emu_set_palette(palette);
 }
 
+static int open_game(void)
+{
+    if (cur.native) {
+        return emu_open_native(&tk_machine);
+    }
+    return cur.paged ? emu_open_paged(rom_size, card_rd, NULL, cache, load_pos) : emu_open_mem(rom, rom_size);
+}
+
 static void begin_run(void)
 {
     int e;
-    if (cur.paged) {
+    if (cur.native) {
+        e = open_game();
+    } else if (cur.paged) {
         e = emu_open_paged(rom_size, card_rd, NULL, cache, (uint32_t)(load_pos));
     } else {
         e = emu_open_mem(rom, rom_size);
@@ -406,6 +419,11 @@ static void start_loading(int sd, int idx, int resume)
         snprintf(cur.title, sizeof cur.title, "%s", g->title);
         rom_size = (uint32_t)g->banks * EMU_BANK;
         cur.crc = g->crc;
+        if (g->flags & PACK_NATIVE) {
+            cur.native = 1;
+            begin_run();
+            return;
+        }
     } else {
         snprintf(cur.title, sizeof cur.title, "%s", sd_name[idx]);
         char *dot = strrchr(cur.title, '.');
@@ -749,7 +767,7 @@ static void menu_do(int row)
         break;
     case M_RESET:
         save_battery(1);
-        if (cur.paged ? emu_open_paged(rom_size, card_rd, NULL, cache, load_pos) : emu_open_mem(rom, rom_size)) {
+        if (open_game()) {
             fail_screen("Couldn't restart the game.");
             return;
         }

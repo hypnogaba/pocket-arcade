@@ -8,7 +8,8 @@ Layout (all little-endian), read by app/pack.c:
 index.bin   "PAI1", u16 count, u16 version, then count records of 256 bytes:
               0 id[12]  12 title[24]  36 genre[12]  48 author[40]
              88 license[24]  112 source[48]  160 blurb[72]
-            232 u8 pack, u8 flags (1: Color game), u8 palette, u8 0
+            232 u8 pack, u8 flags (1: Color game, 2: written for the badge,
+                no ROM and banks 0), u8 palette, u8 0
             236 u16 banks, u16 0   240 u32 blob offset in the pack
             244 u32 preview offset  248 u32 preview length  252 u32 crc32
 p<N>.bin    the games' blobs, each: (banks + 1) u32 offsets from the blob's
@@ -53,6 +54,24 @@ def preview(path):
     out = struct.pack('<H', len(colours)) + b''.join(rgb565_be(*c) for c in colours) + deflate(px)
     return out
 
+def wrap_lines(text, width=22):
+    """The lines app/main.c's wrap() makes of a blurb (the list shows 3)."""
+    lines, p = [], text
+    while p:
+        p = p.lstrip(' ')
+        if not p:
+            break
+        take = min(len(p), width)
+        if len(p) > width:
+            cut = take
+            while cut > 0 and p[cut] != ' ':
+                cut -= 1
+            if cut > 0:
+                take = cut
+        lines.append(p[:take])
+        p = p[take:]
+    return lines
+
 def rom_blob(rom):
     size = 0x8000
     while size < len(rom):
@@ -89,11 +108,21 @@ def main():
     packs = [bytearray()]
     recs = []
     for g in meta['games']:
-        rom = open(os.path.join(romdir, g['rom']), 'rb').read()
-        blob, banks, crc, padded = rom_blob(rom)
-        shot = os.path.join(ROOT, 'build', 'survey', g['slug'], 'f%05d.ppm' % g['shot'])
-        prev = preview(shot)
-        flags = 1 if padded[0x143] in (0x80, 0xC0) else 0
+        if len(wrap_lines(g['blurb'])) > 3:
+            raise SystemExit(f"{g['id']}: the blurb needs more than the list's 3 lines: {wrap_lines(g['blurb'])}")
+        if g.get('native'):
+            # written for the badge (app/tanks.c): no ROM, only the preview;
+            # the crc names its snapshots
+            blob, banks, crc = b'', 0, zlib.crc32(b'native:' + g['id'].encode()) & 0xFFFFFFFF
+            prev = preview(os.path.join(ROOT, g['preview']))
+            flags = 2
+            rom = b''
+        else:
+            rom = open(os.path.join(romdir, g['rom']), 'rb').read()
+            blob, banks, crc, padded = rom_blob(rom)
+            shot = os.path.join(ROOT, 'build', 'survey', g['slug'], 'f%05d.ppm' % g['shot'])
+            prev = preview(shot)
+            flags = 1 if padded[0x143] in (0x80, 0xC0) else 0
         need = len(blob) + len(prev)
         if need > PACK_MAX:
             raise SystemExit(f"{g['id']} is {need} bytes packed: more than one file can hold")

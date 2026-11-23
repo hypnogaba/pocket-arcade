@@ -1,9 +1,9 @@
 {
   "id": "pocket-arcade",
   "name": "Pocket Arcade",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "@hypnogaba",
-  "summary": "30 free Game Boy games in one app, plus your own from the card.",
+  "summary": "16 free Game Boy games, a new tank game, and your own from the card.",
   "icon": "play",
   "accent": "6B2FD9",
   "category": "games",

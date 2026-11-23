@@ -41,6 +41,8 @@ def main():
     tmp = os.path.join(B, 'core-shots')
     os.makedirs(tmp, exist_ok=True)
     for g in meta['games']:
+        if g.get('native'):
+            continue                    # not run by the core
         rom = os.path.join(ROOT, 'roms', g['rom'])
         ra = json.loads(subprocess.run([a, rom, tmp, '2400'], capture_output=True, text=True).stdout.splitlines()[-1])
         rb = json.loads(subprocess.run([b, rom, tmp, '2400'], capture_output=True, text=True).stdout.splitlines()[-1])

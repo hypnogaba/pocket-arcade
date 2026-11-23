@@ -55,3 +55,18 @@ int emu_state_load(const uint8_t *src, uint32_t len, uint32_t game_crc);
 void emu_set_time(int64_t unix_seconds);
 
 uint32_t emu_crc32(const uint8_t *p, uint32_t n, uint32_t crc);
+
+// A game written for the badge itself (tanks.c) behind the same calls: the
+// app runs it, saves it and snapshots it like a cartridge. Its state is
+// plain data (no pointers), so a snapshot is a copy of it.
+typedef struct {
+    void (*reset)(void);
+    void (*frame)(uint8_t keys, uint16_t *fb);   // keys active high, same bits as the joypad
+    uint8_t *ram;                                 // its battery RAM
+    uint32_t ram_size;
+    void *state;
+    uint32_t state_size, build;                   // build: bumped when the state's layout changes
+} emu_native;
+
+// Open a native game (replaces any cartridge); 0.
+int emu_open_native(const emu_native *m);

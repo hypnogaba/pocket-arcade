@@ -32,6 +32,7 @@ static int err;
 static uint16_t err_addr;
 static uint16_t *draw_fb;
 static uint16_t dmg_lut[64];
+static const emu_native *nat;      // a native game instead of the cartridge, or NULL
 static uint8_t joy_before = 0xFF;  // the last joypad byte, for the joypad interrupt   // the core's pixel byte (palette in bits 5-4, shade in 1-0) -> big-endian RGB565
 
 // ---------------------------------------------------------------------------
@@ -202,6 +203,7 @@ static int finish_open(uint8_t (*r8)(struct gb_s *, const uint_fast32_t),
     err = 0;
     err_addr = 0;
     joy_before = 0xFF;
+    nat = NULL;
     memset(&gb, 0, sizeof gb);
     memset(cart_ram, 0xFF, sizeof cart_ram);
     enum gb_init_error_e e = gb_init(&gb, r8, r16, r32, ram_rd, ram_wr, on_error, NULL);
@@ -264,8 +266,22 @@ int emu_open_paged(uint32_t size, emu_read_fn read, void *ud, uint8_t *cache_mem
     return finish_open(pg_rd8, pg_rd16, pg_rd32);
 }
 
+int emu_open_native(const emu_native *m)
+{
+    err = 0;
+    err_addr = 0;
+    misses = 0;
+    nat = m;
+    m->reset();
+    return EMU_OK;
+}
+
 void emu_frame(uint8_t joypad, uint16_t *fb)
 {
+    if (nat) {
+        nat->frame((uint8_t)~joypad, fb);
+        return;
+    }
     if (err) {
         return;
     }
@@ -282,20 +298,24 @@ void emu_frame(uint8_t joypad, uint16_t *fb)
     draw_fb = NULL;
 }
 
-int emu_is_cgb(void) { return gb.cgb.cgbMode != 0; }
+int emu_is_cgb(void) { return nat || gb.cgb.cgbMode != 0; }   // a native game has its own colours
 int emu_error(void) { return err; }
 uint16_t emu_error_addr(void) { return err_addr; }
 uint32_t emu_misses(void) { return misses; }
 
 uint8_t *emu_cart_ram(uint32_t *size)
 {
+    if (nat) {
+        *size = nat->ram_size;
+        return nat->ram;
+    }
     *size = ram_size;
     return cart_ram;
 }
 
 void emu_set_time(int64_t unix_seconds)
 {
-    if (unix_seconds <= 0) {
+    if (unix_seconds <= 0 || nat) {
         return;
     }
     time_t t = (time_t)unix_seconds;
@@ -319,8 +339,13 @@ typedef struct {
 // version bumped by hand when emu.c or Walnut changes.
 #define STATE_BUILD (0x00010000u ^ (uint32_t)sizeof(struct gb_s))
 
+#define NATIVE_MAGIC 0x314E5350u  // "PSN1"
+
 uint32_t emu_state_size(void)
 {
+    if (nat) {
+        return (uint32_t)(sizeof(state_head) + nat->state_size + nat->ram_size);
+    }
     return (uint32_t)(sizeof(state_head) + sizeof gb + ram_size);
 }
 
@@ -329,6 +354,13 @@ uint32_t emu_state_save(uint8_t *dst, uint32_t cap, uint32_t game_crc)
     uint32_t need = emu_state_size();
     if (cap < need) {
         return 0;
+    }
+    if (nat) {
+        state_head n = {NATIVE_MAGIC, nat->state_size, nat->ram_size, game_crc, nat->build};
+        memcpy(dst, &n, sizeof n);
+        memcpy(dst + sizeof n, nat->state, nat->state_size);
+        memcpy(dst + sizeof n + nat->state_size, nat->ram, nat->ram_size);
+        return need;
     }
     state_head h = {STATE_MAGIC, (uint32_t)sizeof gb, ram_size, game_crc, STATE_BUILD};
     memcpy(dst, &h, sizeof h);
@@ -344,6 +376,16 @@ int emu_state_load(const uint8_t *src, uint32_t len, uint32_t game_crc)
         return -1;
     }
     memcpy(&h, src, sizeof h);
+    if (nat) {
+        if (h.magic != NATIVE_MAGIC || h.gb_size != nat->state_size || h.ram_size != nat->ram_size ||
+            h.game_crc != game_crc || h.build != nat->build || len != emu_state_size()) {
+            return -1;
+        }
+        // the RAM is the game's record (high score): newer than any
+        // snapshot, so it stays as it is
+        memcpy(nat->state, src + sizeof h, nat->state_size);
+        return 0;
+    }
     if (h.magic != STATE_MAGIC || h.gb_size != sizeof gb || h.ram_size != ram_size || h.game_crc != game_crc ||
         h.build != STATE_BUILD || len != sizeof h + sizeof gb + ram_size) {
         return -1;

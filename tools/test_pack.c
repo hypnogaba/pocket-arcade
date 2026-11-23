@@ -160,15 +160,41 @@ int main(int argc, char **argv)
         free(orig);
         free(pad);
     }
+    // games written for the badge: no ROM, banks 0, a preview that decodes
+    for (int i = 0; i < n; i++) {
+        const pack_game *g = &games[i];
+        if (!(g->flags & PACK_NATIVE)) {
+            continue;
+        }
+        int pv = pack_preview(g, fb, rd, NULL);
+        snprintf(p, sizeof p, "%s/%s.ppm", argv[4], g->id);
+        if (!pv) {
+            write_ppm(p, fb);
+        }
+        int good = !pv && g->banks == 0;
+        printf("%-10s %s (written for the badge)\n", g->id, good ? "ok" : "FAIL");
+        fails += !good;
+        checked++;
+    }
     // broken packs: a flipped byte or a cut file must be an error
     int broke_ok = 1;
+    int first = -1, second = -1;              // two cartridge games
+    for (int i = 0; i < n; i++) {
+        if (!(games[i].flags & PACK_NATIVE)) {
+            if (first < 0) {
+                first = i;
+            } else if (second < 0) {
+                second = i;
+            }
+        }
+    }
     for (int mode = 0; mode < 2; mode++) {
         corrupt_file = mode == 0 ? 0 : -1;
         cut_to = mode == 1 ? 1000 : 0xFFFFFFFF;
-        const pack_game *g = &games[0];
+        const pack_game *g = &games[first];
         uint8_t *rom = malloc((size_t)g->banks * 16384);
         extern int pack_unpack(const pack_game *, uint32_t, uint32_t, uint8_t *, pack_read_fn, void *);
-        int r = pack_unpack(&games[1], 0, 1, rom, rd, NULL);   // another game first: reload the table
+        int r = pack_unpack(&games[second], 0, 1, rom, rd, NULL);   // another game first: reload the table
         r = pack_unpack(g, 0, g->banks, rom, rd, NULL);
         int crc_same = emu_crc32(rom, (uint32_t)g->banks * 16384, 0) == g->crc;
         if (r == 0 && crc_same) {

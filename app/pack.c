@@ -43,7 +43,7 @@ int pack_index(const uint8_t *buf, uint32_t len, pack_game *games, int cap)
         g->preview_off = rd32(r + 244);
         g->preview_len = rd32(r + 248);
         g->crc = rd32(r + 252);
-        if (!g->banks || g->banks > 512 || !g->id[0]) {
+        if ((!g->banks && !(g->flags & PACK_NATIVE)) || g->banks > 512 || !g->id[0]) {
             return -1;
         }
     }
