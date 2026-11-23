@@ -1,0 +1,7 @@
+[
+ {"tick": 2}, {"key": "back"}, {"tick": 2, "absent": "Tiny"},
+ {"select_row": "Broken.gb"}, {"tick": 10, "ms": 16, "expect": "bad header", "shot": "b1"},
+ {"key": "back"}, {"tick": 2, "expect": "SELECT play"},
+ {"select_row": "Fake.gbc"}, {"tick": 10, "ms": 16, "expect": "isn't supported"},
+ {"key": "back"}, {"tick": 2, "expect": "SELECT play"}
+]
