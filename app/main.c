@@ -31,7 +31,7 @@
 enum { ST_LIST, ST_LOAD, ST_RUN, ST_MENU, ST_PAGE, ST_ERROR };
 static int state = -1;
 
-static uint8_t index_buf[8 + PACK_MAX_GAMES * PACK_REC];
+static uint8_t index_buf[8 + PACK_MAX_GAMES * PACK_REC + 1];   // + the NUL fs_read() adds
 static pack_game games[PACK_MAX_GAMES];
 static int n_games;
 
@@ -61,9 +61,9 @@ static int big, glow = 1, swap_ab, palette;
 
 // Running
 static uint32_t acc_us, chord_ms, keys_before, save_check_ms;
-static int start_frames, select_frames, shown_count;
+static int start_frames, select_frames, shown_count, chord_lock;
 static uint32_t stat_t0, stat_frames, stat_shown, stat_emu_us;
-static uint32_t ram_sum;
+static uint32_t ram_sum, ram_seen, save_quiet_s;
 
 static uint32_t now_us(void)
 {
@@ -142,6 +142,23 @@ static int32_t card_rd(void *ud, uint32_t off, uint8_t *dst, uint32_t len)
     return files_read(sd_name[cur.idx], off, dst, len);
 }
 
+// A card game's saves are named after its whole file name (Zelda.gb and
+// Zelda.gbc stay apart); a long name is cut and gets a hash, and the end may
+// not be a space or a dot (the files API refuses those).
+static uint32_t fnv(const uint8_t *p, uint32_t n);
+static void card_key(char *out, size_t cap, const char *name)
+{
+    size_t len = strlen(name);
+    if (len <= 44) {
+        snprintf(out, cap, "%s", name);
+    } else {
+        snprintf(out, cap, "%.39s~%04x", name, (unsigned)(fnv((const uint8_t *)name, (uint32_t)len) & 0xFFFF));
+    }
+    for (size_t n = strlen(out); n > 0 && (out[n - 1] == ' ' || out[n - 1] == '.'); n--) {
+        out[n - 1] = 0;
+    }
+}
+
 static int is_rom(const char *name)
 {
     const char *dot = strrchr(name, '.');
@@ -184,7 +201,12 @@ static uint32_t fnv(const uint8_t *p, uint32_t n)
 
 static int write_file(const char *name, const uint8_t *p, uint32_t n)
 {
-    files_remove(name);                    // a shorter file must not keep an old tail
+    // Same size: overwrite in place, so a failed write never leaves the
+    // player with no file. Another size: a shorter file must not keep an old
+    // tail, so the old one goes first (only resume.st changes size).
+    if (files_size(name) != (int32_t)n) {
+        files_remove(name);
+    }
     for (uint32_t off = 0; off < n; off += 65536) {
         uint32_t k = n - off < 65536 ? n - off : 65536;
         if (files_write(name, off, p + off, k)) {
@@ -357,6 +379,9 @@ static void begin_run(void)
     clear_screen(COL_BLACK);
     leds_game();
     acc_us = chord_ms = keys_before = save_check_ms = 0;
+    chord_lock = 0;
+    save_quiet_s = 0;
+    ram_seen = ram_sum;
     start_frames = select_frames = shown_count = 0;
     stat_t0 = now_us();
     stat_frames = stat_shown = stat_emu_us = 0;
@@ -387,7 +412,7 @@ static void start_loading(int sd, int idx, int resume)
         if (dot) {
             *dot = 0;
         }
-        snprintf(cur.key, sizeof cur.key, "%.50s", cur.title);
+        card_key(cur.key, sizeof cur.key, sd_name[idx]);
         rom_size = (uint32_t)sd_size[idx];
         if (rom_size > EMU_MAX_BANKS * EMU_BANK) {
             fail_screen("Bigger than any Game Boy cartridge.");
@@ -458,7 +483,8 @@ static void load_tick(void)
         return;
     }
     uint32_t real = (uint32_t)sd_size[cur.idx];
-    while (load_pos < real && now_us() - t0 < LOAD_BUDGET_US) {
+    (void)t0;
+    if (load_pos < real) {              // one 256 KB read a tick: about 65,000 of the 200,000 host steps
         uint32_t k = real - load_pos < 262144 ? real - load_pos : 262144;
         int32_t n = files_read(sd_name[cur.idx], load_pos, rom + load_pos, k);
         if (n <= 0) {
@@ -481,7 +507,12 @@ static uint8_t joypad(uint32_t k)
 {
     int s = KEY_HELD(k, KEY_SELECT), c = KEY_HELD(k, KEY_BACK);
     if (s && c) {
-        s = c = 0;                      // the chord is START (or the menu), not A + B
+        chord_lock = 1;                 // the chord is START (or the menu), not A + B
+    } else if (!s && !c) {
+        chord_lock = 0;
+    }
+    if (chord_lock) {
+        s = c = 0;                      // until both are up: letting go one by one isn't A or B
     }
     int a = swap_ab ? c : s, b = swap_ab ? s : c;
     uint8_t p = 0;                      // bits: A B SELECT START RIGHT LEFT UP DOWN
@@ -552,10 +583,21 @@ static void run_tick(int32_t ms)
     }
     stat_emu_us += now_us() - t;
     stat_frames += (uint32_t)n;
+    // Battery save while playing: at most every 30 s, and only once the RAM
+    // has held still for 2 s (games that use it as work RAM change it every
+    // frame; theirs is saved from the menu, on leaving and on HOME).
     save_check_ms += (uint32_t)ms;
-    if (save_check_ms > 30000) {
+    if (save_check_ms >= 2000) {
         save_check_ms = 0;
-        save_battery(0);
+        uint32_t size;
+        uint8_t *ram = emu_cart_ram(&size);
+        uint32_t h = size ? fnv(ram, size) : 0;
+        save_quiet_s += 2;
+        if (h == ram_seen && save_quiet_s >= 30) {
+            save_battery(0);
+            save_quiet_s = 0;
+        }
+        ram_seen = h;
     }
     uint32_t el = now_us() - stat_t0;
     if (el >= 5000000) {

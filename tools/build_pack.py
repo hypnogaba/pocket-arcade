@@ -75,8 +75,14 @@ def rom_blob(rom):
 
 def main():
     meta = json.load(open(os.path.join(ROOT, 'tools', 'games.json')))
-    romdir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'roms')
+    argv = sys.argv[1:]
     out = os.path.join(ROOT, 'app', 'games')
+    if '--out' in argv:                      # a test build elsewhere, e.g. a few games for the emulator
+        out = argv[argv.index('--out') + 1]
+    if '--only' in argv:
+        keep = argv[argv.index('--only') + 1].split(',')
+        meta['games'] = [g for g in meta['games'] if g['id'] in keep]
+    romdir = os.path.join(ROOT, 'roms')
     os.makedirs(out, exist_ok=True)
     for f in os.listdir(out):
         os.remove(os.path.join(out, f))

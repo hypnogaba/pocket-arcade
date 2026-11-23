@@ -31,7 +31,8 @@ static uint32_t ram_size;
 static int err;
 static uint16_t err_addr;
 static uint16_t *draw_fb;
-static uint16_t dmg_lut[64];   // the core's pixel byte (palette in bits 5-4, shade in 1-0) -> big-endian RGB565
+static uint16_t dmg_lut[64];
+static uint8_t joy_before = 0xFF;  // the last joypad byte, for the joypad interrupt   // the core's pixel byte (palette in bits 5-4, shade in 1-0) -> big-endian RGB565
 
 // ---------------------------------------------------------------------------
 // ROM reads: the core calls these for every opcode, keep them short.
@@ -200,6 +201,7 @@ static int finish_open(uint8_t (*r8)(struct gb_s *, const uint_fast32_t),
 {
     err = 0;
     err_addr = 0;
+    joy_before = 0xFF;
     memset(&gb, 0, sizeof gb);
     memset(cart_ram, 0xFF, sizeof cart_ram);
     enum gb_init_error_e e = gb_init(&gb, r8, r16, r32, ram_rd, ram_wr, on_error, NULL);
@@ -270,11 +272,10 @@ void emu_frame(uint8_t joypad, uint16_t *fb)
     draw_fb = fb;
     // A button going down raises the joypad interrupt, as on the console:
     // some games HALT until it comes (Walnut doesn't raise it itself).
-    static uint8_t before = 0xFF;
-    if ((uint8_t)(before & ~joypad)) {
+    if ((uint8_t)(joy_before & ~joypad)) {
         gb.hram_io[IO_IF] |= CONTROL_INTR;
     }
-    before = joypad;
+    joy_before = joypad;
     gb.direct.joypad = joypad;
     gb.display.lcd_draw_line = fb ? draw_line : NULL;
     gb_run_frame_dualfetch(&gb);
@@ -362,6 +363,7 @@ int emu_state_load(const uint8_t *src, uint32_t len, uint32_t game_crc)
     gb.direct.priv = keep.direct.priv;
     memcpy(cart_ram, src + sizeof h + sizeof gb, ram_size);
     err = 0;
+    joy_before = 0xFF;
     return 0;
 }
 
