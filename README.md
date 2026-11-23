@@ -38,8 +38,13 @@ The badge has no speaker, so the games are silent.
   DoubleZero); all five give a Solana-purple tank.
 - **Tank Siege leaderboard online** and **share on X** with a picture card (server/: the
   `pocket-arcade` worker, D1 `pocket-arcade-scores`, signed badge requests).
-- Swapped the three heaviest colour games (Snake, Dusky Dungeon, GBHack) for light original
-  Game Boy ones (Wyrmhole, PostBot, Squishy the Turtle): simple 8-bit pictures, less work a frame.
+- **Classic arcade genres first** (Ivan: "tanks, Mario and that kind of thing"): platformers
+  (Potion Panic, Tuff, Tobu Tobu Girl DX, Squishy the Turtle, A Slime Travel), shooters (Alien
+  Invasion, Wyrmhole, Zypher, El Dueloroso), action (Max Pirate, Unstoppable Knight, Renegade
+  Rush, Shock Lobster, Grub Glide), Porklike and 2048, with Tank Siege. All open licences from
+  Homebrew Hub, all light on the badge. Out: Snake, Dusky Dungeon, GBHack (heavy colour games),
+  Wordyl, uCity, Big2Small, Libbet, PostBot, Sushi Nights. Commercial ROMs (Mario, Tetris,
+  Battle City) are never bundled: people who own a cartridge copy their dump to the card.
 
 ## Keys
 

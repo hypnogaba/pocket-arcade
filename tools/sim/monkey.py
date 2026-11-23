@@ -17,7 +17,7 @@ for _ in range(int(sys.argv[2])):
     elif x < 0.85:
         steps.append({"tick": r.choice([2, 3, 70, 80]), "ms": 16, "hold": "select,back"})
     elif x < 0.97:
-        steps.append({"select_row": r.choice(["Save state", "Load state", "Colours", "Screen", "Restart", "Save and go", "Credits", "How to play", "Continue", "Broken", "Fake", "Snake", "uCity", "Aevilia", "Libbet", "Back to the game", "Press SELECT"])})
+        steps.append({"select_row": r.choice(["Save state", "Load state", "Colours", "Screen", "Restart", "Save and go", "Credits", "How to play", "Continue", "Broken", "Fake", "Tuff", "Porklike", "Grub Glide", "El Dueloroso", "Back to the game", "Press SELECT"])})
     else:
         steps.append({"exit": True})
 print(json.dumps(steps))

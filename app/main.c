@@ -455,9 +455,9 @@ static int default_palette(const pack_game *g)
     static const struct {
         const char *id;
         int pal;
-    } pick[] = {{"tobu", 2}, {"potion", 4}, {"alien", 3}, {"wyrm", 2}, {"2048", 4}, {"wordyl", 5},
-                {"ucity", 1}, {"lobster", 3}, {"zypher", 5}, {"pirate", 4}, {"rush", 3}, {"sushi", 2},
-                {"big2small", 4}, {"libbet", 5}, {"postbot", 1}, {"squishy", 3}};
+    } pick[] = {{"tobu", 2}, {"potion", 4}, {"alien", 3}, {"wyrm", 2}, {"2048", 4}, {"tuff", 2},
+                {"duel", 4}, {"lobster", 3}, {"zypher", 5}, {"pirate", 4}, {"rush", 3}, {"grub", 5},
+                {"pork", 5}, {"knight", 3}, {"slime", 2}, {"squishy", 3}};
     if (g->palette) {
         return g->palette;
     }

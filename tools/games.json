@@ -13,6 +13,32 @@
    "preview": "build/tanks/preview.ppm"
   },
   {
+   "id": "potion",
+   "slug": "deved_potion-panic",
+   "rom": "potion-panic.gbc",
+   "title": "Potion Panic",
+   "genre": "Platform",
+   "author": "DevEd",
+   "license": "MIT",
+   "source": "github.com/DevEd2/potion-panic",
+   "blurb": "A magic trick goes wrong. Jump and zap your way to the demon.",
+   "shot": 1500,
+   "sha256": "86922a48308031d5ca7e79cecbfbe3b4d41c8f094e0c2a5f90b6ced362d708f8"
+  },
+  {
+   "id": "tuff",
+   "slug": "tuff",
+   "rom": "tuff.gb",
+   "title": "Tuff",
+   "genre": "Platform",
+   "author": "BonsaiDen",
+   "license": "MIT",
+   "source": "github.com/BonsaiDen/Tuff.gb",
+   "blurb": "A tiny hero in a big cave world. Run, jump, swim, explore.",
+   "shot": 900,
+   "sha256": "ca28220f7f04460cef5d652a6298989ff00efe92e2a08a67f874bc865d98f7a6"
+  },
+  {
    "id": "tobu",
    "slug": "tobutobugirldeluxe",
    "rom": "tobu-dx.gb",
@@ -26,17 +52,30 @@
    "sha256": "0a0e8018dbbc8d7f8cd99f05e7cdc7b4cc9e358ecfe9377ebfb2291a84c6e310"
   },
   {
-   "id": "potion",
-   "slug": "deved_potion-panic",
-   "rom": "potion-panic.gbc",
-   "title": "Potion Panic",
+   "id": "squishy",
+   "slug": "squishy-the-turtle",
+   "rom": "squishy.gb",
+   "title": "Squishy the Turtle",
    "genre": "Platform",
-   "author": "DevEd",
+   "author": "Cppchriscpp",
    "license": "MIT",
-   "source": "github.com/DevEd2/potion-panic",
-   "blurb": "A magic trick goes wrong. Jump and zap your way to the demon.",
+   "source": "github.com/potatolain/SquishyTheTurtle",
+   "blurb": "Grow and shrink at will to find all of Squishy's lost eggs.",
+   "shot": 400,
+   "sha256": "ac1e2eff95cdcf71ed931bd16c88f080038977b8b9dcde433bc023ee6b86c021"
+  },
+  {
+   "id": "slime",
+   "slug": "a-slime-travel",
+   "rom": "a-slime-travel.gbc",
+   "title": "A Slime Travel",
+   "genre": "Platform",
+   "author": "Dribble Studios",
+   "license": "Zlib",
+   "source": "hh.gbdev.io/game/a-slime-travel",
+   "blurb": "Hop a little slime across tricky rooms to the portal.",
    "shot": 1500,
-   "sha256": "86922a48308031d5ca7e79cecbfbe3b4d41c8f094e0c2a5f90b6ced362d708f8"
+   "sha256": "a92919a1e0d78683f0a245de55d3fc1a0fc07df74a758084ab2e552cb3bc115c"
   },
   {
    "id": "alien",
@@ -65,58 +104,6 @@
    "sha256": "a5e07f89119ee9c93aa50ec1ff828b2441781fa9b1a137f03af7b6c53ce03252"
   },
   {
-   "id": "2048",
-   "slug": "2048gb",
-   "rom": "2048.gb",
-   "title": "2048",
-   "genre": "Puzzle",
-   "author": "Sanqui",
-   "license": "zlib",
-   "source": "github.com/Sanqui/2048-gb",
-   "blurb": "Slide the tiles, merge the numbers, reach 2048.",
-   "shot": 2400,
-   "sha256": "3ea2376b15b34bd26b10e6b31d2753bf8b086098dbdb5ee84d9c0f03d66d3d7f"
-  },
-  {
-   "id": "wordyl",
-   "slug": "gb-wordyl",
-   "rom": "wordyl.gb",
-   "title": "Wordyl",
-   "genre": "Word",
-   "author": "bbbbbr",
-   "license": "GPL-3.0",
-   "source": "github.com/bbbbbr/gb-wordle",
-   "blurb": "Guess the five-letter word in six tries.",
-   "shot": 400,
-   "sha256": "acc12e3e920e0c432606846da60a5ca9bba21f8012304e8de4a26f88273d14de"
-  },
-  {
-   "id": "ucity",
-   "slug": "ucity",
-   "rom": "ucity.gb",
-   "title": "uCity",
-   "genre": "Strategy",
-   "author": "AntonioND",
-   "license": "GPL-3.0",
-   "source": "github.com/AntonioND/ucity",
-   "blurb": "Build a city: roads, homes, power, jobs. Keep the people happy.",
-   "shot": 152,
-   "sha256": "0d608db175dd8ba22780be5df5fc17bf135876f6964f58ee141e4f8d81c62947"
-  },
-  {
-   "id": "lobster",
-   "slug": "shock-lobster",
-   "rom": "shock-lobster.gb",
-   "title": "Shock Lobster",
-   "genre": "Arcade",
-   "author": "tbsp (music: Tomas Danko, CC BY 4.0)",
-   "license": "zlib",
-   "source": "github.com/tbsp/shock-lobster",
-   "blurb": "A magic lobster zips and zaps through an undersea quest.",
-   "shot": 1500,
-   "sha256": "f14efd0340903b1b00d7e8b4b39687d4bc33355ac7742267ccfddfe92f54a611"
-  },
-  {
    "id": "zypher",
    "slug": "zypher",
    "rom": "zypher.gb",
@@ -128,6 +115,19 @@
    "blurb": "A side-scrolling shooter: send the alien fleet back home.",
    "shot": 900,
    "sha256": "1baa54454a61ebb0fef8b34dbd07785d556eb35f381c7b39d7d56f37b034ab81"
+  },
+  {
+   "id": "duel",
+   "slug": "el-dueloroso",
+   "rom": "el-dueloroso.gb",
+   "title": "El Dueloroso",
+   "genre": "Shooter",
+   "author": "Adrian JG",
+   "license": "GPL-3.0",
+   "source": "github.com/ajgalan/el-dueloroso",
+   "blurb": "Saloon shootout: hit the outlaws, spare the folks.",
+   "shot": 900,
+   "sha256": "21b8c78aec985c9c9335db154b186adde9e2aaba32fc7ed76c9cf37cb8ffcf3c"
   },
   {
    "id": "pirate",
@@ -143,6 +143,19 @@
    "sha256": "11320e82aea34d56c3b8b5cabd3c15122ff0bbb281ec397d39b3f80a0bda688c"
   },
   {
+   "id": "knight",
+   "slug": "unstoppable-knight",
+   "rom": "knight.gb",
+   "title": "Unstoppable Knight",
+   "genre": "Action",
+   "author": "Rafagars",
+   "license": "MIT",
+   "source": "github.com/Rafagars/Unstoppable-Knight-GB",
+   "blurb": "Run up the road, dodge the monsters, grab the gold.",
+   "shot": 900,
+   "sha256": "42637b68a3d2806062ba410eb848e7ff2c021829a0fb616d15e3b56643f241fc"
+  },
+  {
    "id": "rush",
    "slug": "renegade-rush",
    "rom": "renegade-rush.gb",
@@ -156,69 +169,56 @@
    "sha256": "0511a3de1bb59a5bd8bcf4e1463df7ea03a2aae66f30542b85ee51aa25f527a6"
   },
   {
-   "id": "sushi",
-   "slug": "sushi-nights",
-   "rom": "sushi-nights.gb",
-   "title": "Sushi Nights",
-   "genre": "Action",
-   "author": "Zalo",
-   "license": "MIT",
-   "source": "github.com/Zal0/SushiNights",
-   "blurb": "Swing across the city at night and deliver sushi on time.",
-   "shot": 152,
-   "sha256": "5b3203e60e8815acf75e25c5ae369815da047c0f46b81ad3bcc8513ce7167e25"
-  },
-  {
-   "id": "big2small",
-   "slug": "big2small",
-   "rom": "big2small.gb",
-   "title": "Big2Small",
-   "genre": "Puzzle",
-   "author": "mdsteele",
-   "license": "GPL-3.0",
-   "source": "github.com/mdsteele/big2small",
-   "blurb": "Guide an elephant, a goat and a mouse to their goals together.",
-   "shot": 900,
-   "sha256": "59c096333f93c12c8eb25a5fcffa2be15001abcd5d20b9a82c2bc2dae7e625b2"
-  },
-  {
-   "id": "libbet",
-   "slug": "libbet",
-   "rom": "libbet.gb",
-   "title": "Libbet",
-   "genre": "Puzzle",
-   "author": "Damian Yerrick",
+   "id": "lobster",
+   "slug": "shock-lobster",
+   "rom": "shock-lobster.gb",
+   "title": "Shock Lobster",
+   "genre": "Arcade",
+   "author": "tbsp (music: Tomas Danko, CC BY 4.0)",
    "license": "zlib",
-   "source": "github.com/pinobatch/libbet",
-   "blurb": "Roll across the magic floor and light up every tile.",
+   "source": "github.com/tbsp/shock-lobster",
+   "blurb": "A magic lobster zips and zaps through an undersea quest.",
+   "shot": 1500,
+   "sha256": "f14efd0340903b1b00d7e8b4b39687d4bc33355ac7742267ccfddfe92f54a611"
+  },
+  {
+   "id": "grub",
+   "slug": "grub-glide",
+   "rom": "grub-glide.gb",
+   "title": "Grub Glide",
+   "genre": "Arcade",
+   "author": "Ethan Hazel",
+   "license": "Zlib",
+   "source": "github.com/Exetric/GrubGlide",
+   "blurb": "Glide a grub through rings in the clouds. One more go!",
    "shot": 900,
-   "sha256": "079d161bf2bff4f3baec01339b4f6f02ff6f966c69456885a165b97aac11fa12"
+   "sha256": "7cb3d8ae5dd5d042436982f0e78a5daab4d99620eb50adb260cab9b37221b9c0"
   },
   {
-   "id": "postbot",
-   "slug": "postbot",
-   "rom": "postbot.gb",
-   "title": "PostBot",
+   "id": "pork",
+   "slug": "porklike-gb",
+   "rom": "porklike.gb",
+   "title": "Porklike",
+   "genre": "Roguelike",
+   "author": "binji, Lazy Devs",
+   "license": "MIT",
+   "source": "github.com/binji/porklike.gb",
+   "blurb": "Dig down a dungeon full of pigs. Every run is new.",
+   "shot": 1500,
+   "sha256": "d4ee86833a580c92aa789aef03407b90a6cc6eb27e70d3477c41c970d0cf3f11"
+  },
+  {
+   "id": "2048",
+   "slug": "2048gb",
+   "rom": "2048.gb",
+   "title": "2048",
    "genre": "Puzzle",
-   "author": "Tobias Rojahn",
-   "license": "MIT",
-   "source": "github.com/MasterIV/PostBot",
-   "blurb": "Program a little robot to deliver all the mail.",
-   "shot": 400,
-   "sha256": "65824d3d7df8003f19923b38055a0660c20542cc363894091da661d9d49d13ad"
-  },
-  {
-   "id": "squishy",
-   "slug": "squishy-the-turtle",
-   "rom": "squishy.gb",
-   "title": "Squishy the Turtle",
-   "genre": "Platform",
-   "author": "Cppchriscpp",
-   "license": "MIT",
-   "source": "github.com/potatolain/SquishyTheTurtle",
-   "blurb": "Grow and shrink at will to find all of Squishy's lost eggs.",
-   "shot": 400,
-   "sha256": "ac1e2eff95cdcf71ed931bd16c88f080038977b8b9dcde433bc023ee6b86c021"
+   "author": "Sanqui",
+   "license": "zlib",
+   "source": "github.com/Sanqui/2048-gb",
+   "blurb": "Slide the tiles, merge the numbers, reach 2048.",
+   "shot": 2400,
+   "sha256": "3ea2376b15b34bd26b10e6b31d2753bf8b086098dbdb5ee84d9c0f03d66d3d7f"
   }
  ]
 }

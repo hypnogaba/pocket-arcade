@@ -21,7 +21,7 @@
  },
  {
   "tick": 2,
-  "expect": "DevEd",
+  "expect": "BonsaiDen",
   "shot": "03-list-moved",
   "dump": true
  },
@@ -353,11 +353,11 @@
   "shot": "12-credits"
  },
  {
-  "select_row": "Libbet"
+  "select_row": "Tuff"
  },
  {
   "tick": 1,
-  "expect": "github.com/pinobatch/libbet"
+  "expect": "github.com/BonsaiDen/Tuff.gb"
  },
  {
   "key": "back"
