@@ -40,6 +40,7 @@ typedef struct {
 } emu_palette;
 extern const emu_palette emu_palettes[];
 extern const int emu_n_palettes;
+#define EMU_BASE_PALETTES 6        // always open; the rest open one per secret found (main.c)
 void emu_set_palette(int i);
 
 // Battery RAM.

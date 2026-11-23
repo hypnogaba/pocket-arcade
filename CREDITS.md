@@ -12,7 +12,7 @@ pins each file by SHA-256. GPL-licensed games: their source is at the link given
 | Tobu Tobu Girl DX | Arcade | Tangram Games | MIT, art CC BY 4.0 | [github.com/SimonLarsen/tobutobugirl-dx](https://github.com/SimonLarsen/tobutobugirl-dx) |
 | Potion Panic | Platform | DevEd | MIT | [github.com/DevEd2/potion-panic](https://github.com/DevEd2/potion-panic) |
 | Alien Invasion | Shooter | FerrantePescara | GPL-3.0 | [github.com/NiliusJulius/Alien-Invasion](https://github.com/NiliusJulius/Alien-Invasion) |
-| Snake | Classic | Yvar de Goffau | WTFPL | [github.com/Yvar-deGoffau/GBSnake](https://github.com/Yvar-deGoffau/GBSnake) |
+| Wyrmhole | Shooter | quinnp | MIT | [github.com/QuinnPainter/Wyrmhole](https://github.com/QuinnPainter/Wyrmhole) |
 | 2048 | Puzzle | Sanqui | zlib | [github.com/Sanqui/2048-gb](https://github.com/Sanqui/2048-gb) |
 | Wordyl | Word | bbbbbr | GPL-3.0 | [github.com/bbbbbr/gb-wordle](https://github.com/bbbbbr/gb-wordle) |
 | uCity | Strategy | AntonioND | GPL-3.0 | [github.com/AntonioND/ucity](https://github.com/AntonioND/ucity) |
@@ -23,8 +23,8 @@ pins each file by SHA-256. GPL-licensed games: their source is at the link given
 | Sushi Nights | Action | Zalo | MIT | [github.com/Zal0/SushiNights](https://github.com/Zal0/SushiNights) |
 | Big2Small | Puzzle | mdsteele | GPL-3.0 | [github.com/mdsteele/big2small](https://github.com/mdsteele/big2small) |
 | Libbet | Puzzle | Damian Yerrick | zlib | [github.com/pinobatch/libbet](https://github.com/pinobatch/libbet) |
-| Dusky Dungeon | Adventure | invertedHat | MIT, art CC BY 4.0 | [github.com/inverted-hat/duskyDungeon](https://github.com/inverted-hat/duskyDungeon) |
-| GBHack | RPG | statico | MIT | [github.com/statico/gbhack](https://github.com/statico/gbhack) |
+| PostBot | Puzzle | Tobias Rojahn | MIT | [github.com/MasterIV/PostBot](https://github.com/MasterIV/PostBot) |
+| Squishy the Turtle | Platform | Cppchriscpp | MIT | [github.com/potatolain/SquishyTheTurtle](https://github.com/potatolain/SquishyTheTurtle) |
 
 ## Code inside the app
 

@@ -421,6 +421,49 @@ static void test_speed(void)
     printf("speed: %.1f us a frame with drawing (this computer, sanitizers on)\n", us);
 }
 
+// Pocket Arcade's secrets read the game from outside: the star level, the
+// high score and the furthest stage; all secrets paint the player's tank.
+static void test_secret_hooks(void)
+{
+    static uint16_t a[TK_W * TK_H], b[TK_W * TK_H];
+    tk_reset();
+    tk_load_stage(1);
+    for (int i = 0; i < 90; i++) {
+        tk_frame(0, NULL);              // the tank appears out of its sparkle
+    }
+    if (tk_level() != 0) {
+        FAIL("a new life starts with no stars (level %d)", tk_level());
+    }
+    tk_set_skin(0);
+    tk_frame(0, a);
+    tk_set_skin(1);
+    tk_frame(0, b);
+    tk_set_skin(0);
+    int diff = 0;
+    for (int i = 0; i < TK_W * TK_H; i++) {
+        diff += a[i] != b[i];
+    }
+    if (diff < 20) {
+        FAIL("the Solana skin should repaint the player's tank (%d pixels differ)", diff);
+    }
+    if (tk_furthest() < 1) {
+        FAIL("furthest stage %d", tk_furthest());
+    }
+    tk_cheat(2);
+    for (int n = 0; n < 6000 && tk_mode() != TK_CLEAR; n++) {
+        if (n % 60 == 0) {
+            tk_cheat(1);
+        }
+        tk_frame(0, NULL);
+    }
+    if (tk_mode() != TK_CLEAR) {
+        FAIL("stage 1 not cleared with the cheats (mode %d)", tk_mode());
+    } else if (tk_hi() < tk_score() || tk_hi() == 0) {
+        FAIL("high score %u should cover the score %u", (unsigned)tk_hi(), (unsigned)tk_score());
+    }
+    printf("secret hooks: skin repaints %d pixels, hi %u, furthest %d\n", diff, (unsigned)tk_hi(), tk_furthest());
+}
+
 int main(int argc, char **argv)
 {
     const char *dir = argc > 1 ? argv[1] : ".";
@@ -437,6 +480,7 @@ int main(int argc, char **argv)
     }
     test_snapshot_exact();
     test_speed();
+    test_secret_hooks();
     printf(fails ? "%d FAILED\n" : "all tank tests passed\n", fails);
     return fails != 0;
 }

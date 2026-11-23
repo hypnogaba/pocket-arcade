@@ -61,6 +61,8 @@ static int fbi;
 
 // Settings (storage)
 static int big, glow = 1, swap_ab, palette;
+static int page_about, page_board;      // which page is up (SELECT means credits / refresh there)
+static int board_send(void);
 
 // Running
 static uint32_t acc_us, chord_ms, keys_before, save_check_ms;
@@ -80,14 +82,20 @@ static void open_menu(void);
 
 // Handles we keep, freed before every ui_clear() (which removes the objects
 // but not the handles); labels we never touch again are freed at once.
-static ui_obj game_list, menu_list, credit_list, load_bar, info[4];
+#define BOARD_ROWS 9
+static ui_obj game_list, menu_list, credit_list, set_list, load_bar, info[4], board_lbl[BOARD_ROWS + 1];
 
 static void forget_ui(void)
 {
-    ui_obj *keep[] = {&game_list, &menu_list, &credit_list, &load_bar, &info[0], &info[1], &info[2], &info[3]};
+    ui_obj *keep[] = {&game_list, &menu_list, &credit_list, &set_list, &load_bar, &info[0], &info[1], &info[2], &info[3]};
     for (unsigned i = 0; i < sizeof keep / sizeof keep[0]; i++) {
         if (keep[i]->ref) {
             badge_obj_free(keep[i]);
+        }
+    }
+    for (int i = 0; i <= BOARD_ROWS; i++) {
+        if (board_lbl[i].ref) {
+            badge_obj_free(&board_lbl[i]);
         }
     }
 }
@@ -349,8 +357,123 @@ static void storage_key(char *out, size_t cap, const char *what)
     snprintf(out, cap, "%s%.40s", what, cur.key);
 }
 
+// ---------------------------------------------------------------------------
+// Secrets: the list's "Secrets" page has a hint for each (where, and how it
+// starts) and, once found, how it was done. Each one found opens one more
+// colour set for Game Boy games; all five turn the Tank Siege tank Solana purple.
+
+enum { S_IBRL, S_TIME, S_COLLECT, S_FLAWLESS, S_STARS, S_N };
+static const struct {
+    const char *name, *hint, *how;
+} secrets[S_N] = {
+    {"IBRL MODE", "Game list: up up down down, then...", "UP UP DOWN DOWN LEFT RIGHT LEFT RIGHT"},
+    {"TIME TRAVEL", "Game menu: save a state, then load it.", "Save state, then Load state"},
+    {"COLLECTOR", "Game list: play 5 different games.", "5 different games started"},
+    {"FLAWLESS", "Tank Siege: clear a stage, lose no tank.", "a stage cleared without a hit"},
+    {"STEEL SHOTS", "Tank Siege: take 3 stars in one life.", "3 stars: shots that break steel"},
+};
+static int secret_bits;                 // storage "sec"
+
+static int secrets_found(void)
+{
+    int n = 0;
+    for (int i = 0; i < S_N; i++) {
+        n += (secret_bits >> i) & 1;
+    }
+    return n;
+}
+
+static int palettes_open(void)
+{
+    int n = EMU_BASE_PALETTES + secrets_found();
+    return n < emu_n_palettes ? n : emu_n_palettes;
+}
+
+static void find_secret(int s)
+{
+    if (s < 0 || s >= S_N || (secret_bits >> s) & 1) {
+        return;
+    }
+    secret_bits |= 1 << s;
+    storage_set_int("sec", secret_bits);
+    int n = secrets_found();
+    const char *colours = emu_palettes[palettes_open() - 1].name;
+    char m[120];
+    if (n == S_N) {
+        tk_set_skin(1);
+        snprintf(m, sizeof m, "ALL 5 SECRETS! New colours: %s. Tank Siege: a Solana tank.", colours);
+    } else {
+        snprintf(m, sizeof m, "SECRET %d/%d: %s! New colours: %s (game menu)", n, S_N, secrets[s].name, colours);
+    }
+    ui_toast(m);
+}
+
+// Tank Siege, watched from outside: FLAWLESS, STEEL SHOTS and the best score
+// for the share screen. Called after the frames of a tick.
+static int ts_mode = -1, ts_lives, ts_hit;
+
+static void tank_watch(void)
+{
+    int m = tk_mode(), l = tk_lives();
+    if (m == TK_PLAY) {
+        if (ts_mode != TK_PLAY) {
+            ts_lives = l;               // a stage (or a resumed one) starts
+            ts_hit = 0;
+        }
+        if (l < ts_lives) {
+            ts_hit = 1;
+        }
+        ts_lives = l;
+        if (tk_level() >= 3) {
+            find_secret(S_STARS);
+        }
+    }
+    if (m != ts_mode) {
+        if (m == TK_CLEAR && ts_mode == TK_PLAY && !ts_hit) {
+            find_secret(S_FLAWLESS);
+        }
+        int over = m == TK_OVER && ts_mode != TK_OVER;
+        uint32_t hi = tk_hi();
+        if (hi > (uint32_t)storage_get_int("ts_hi", 0) && hi < 0x7FFFFFFF) {
+            storage_set_int("ts_hi", (int32_t)hi);
+        }
+        int far = tk_furthest();
+        if (far > storage_get_int("ts_st", 1)) {
+            storage_set_int("ts_st", far);
+        }
+        if (over) {
+            board_send();               // a new best goes on the leaderboard (when online)
+        }
+        ts_mode = m;
+    }
+}
+
+// Original Game Boy games are four shades of one colour; each bundled game
+// gets its own set so the list doesn't look all green (the menu changes it).
+static int default_palette(const pack_game *g)
+{
+    static const struct {
+        const char *id;
+        int pal;
+    } pick[] = {{"tobu", 2}, {"potion", 4}, {"alien", 3}, {"wyrm", 2}, {"2048", 4}, {"wordyl", 5},
+                {"ucity", 1}, {"lobster", 3}, {"zypher", 5}, {"pirate", 4}, {"rush", 3}, {"sushi", 2},
+                {"big2small", 4}, {"libbet", 5}, {"postbot", 1}, {"squishy", 3}};
+    if (g->palette) {
+        return g->palette;
+    }
+    for (unsigned i = 0; i < sizeof pick / sizeof pick[0]; i++) {
+        if (!strcmp(g->id, pick[i].id)) {
+            return pick[i].pal;
+        }
+    }
+    return 2;                           // Solana
+}
+
 static void apply_palette(void)
 {
+    if (palette < 0 || palette >= palettes_open()) {
+        palette = 0;                    // a secret colour set from another badge's storage, say
+    }
     emu_set_palette(palette);
 }
 
@@ -379,7 +502,7 @@ static void begin_run(void)
     }
     char k[64];
     storage_key(k, sizeof k, "p_");
-    palette = storage_get_int(k, cur.sd ? 0 : games[cur.idx].palette);
+    palette = storage_get_int(k, cur.sd ? 2 : default_palette(&games[cur.idx]));
     apply_palette();
     load_battery();
     emu_set_time(sys_time());
@@ -400,6 +523,7 @@ static void begin_run(void)
     stat_frames = stat_shown = stat_emu_us = 0;
     sys_tick(16);
     state = ST_RUN;
+    ui_toast("START: tap SELECT+CANCEL together. Hold both 1 s: menu, exit");
 }
 
 
@@ -415,12 +539,22 @@ static void start_loading(int sd, int idx, int resume)
     cache = NULL;
     if (!sd) {
         const pack_game *g = &games[idx];
+        int played = storage_get_int("played", 0) | (1 << (idx & 31));
+        storage_set_int("played", played);
+        int kinds = 0;
+        for (int i = 0; i < 32; i++) {
+            kinds += (played >> i) & 1;
+        }
+        if (kinds >= 5) {
+            find_secret(S_COLLECT);
+        }
         snprintf(cur.key, sizeof cur.key, "%s", g->id);
         snprintf(cur.title, sizeof cur.title, "%s", g->title);
         rom_size = (uint32_t)g->banks * EMU_BANK;
         cur.crc = g->crc;
         if (g->flags & PACK_NATIVE) {
             cur.native = 1;
+            ts_mode = -1;
             begin_run();
             return;
         }
@@ -601,6 +735,9 @@ static void run_tick(int32_t ms)
     }
     stat_emu_us += now_us() - t;
     stat_frames += (uint32_t)n;
+    if (cur.native) {
+        tank_watch();
+    }
     // Battery save while playing: at most every 30 s, and only once the RAM
     // has held still for 2 s (games that use it as work RAM change it every
     // frame; theirs is saved from the menu, on leaving and on HOME).
@@ -736,10 +873,11 @@ static void menu_do(int row)
             ui_toast("No saved state for this game yet");
         } else {
             back_to_game();
+            find_secret(S_TIME);
         }
         break;
     case M_COLOURS: {
-        palette = (palette + 1) % emu_n_palettes;
+        palette = (palette + 1) % palettes_open();
         apply_palette();
         char k[64];
         storage_key(k, sizeof k, "p_");
@@ -786,7 +924,7 @@ static void menu_do(int row)
 // The game list: games on the left, a picture of the selected one on the
 // right, who made it and what it is below.
 
-enum { R_CONTINUE, R_GAME, R_SD, R_HELP, R_ABOUT };
+enum { R_CONTINUE, R_GAME, R_SD, R_SECRETS, R_BOARD, R_SHARE, R_SETTINGS, R_HELP, R_INFO, R_ABOUT };
 typedef struct {
     uint8_t kind;
     int16_t idx;
@@ -795,6 +933,7 @@ static row_t rows[MAX_ROWS];
 static ui_row list_rows[MAX_ROWS];
 static char row_sub[MAX_ROWS][28];
 static char continue_title[NAME_MAX_ + 12];
+static char secrets_title[24];
 static int n_rows, list_pick = -1, shown_row = -1;
 static int resume_sd, resume_idx = -1;
 
@@ -902,6 +1041,26 @@ static void show_info(int r)
         cartridge_picture(px, 0x14F195);
         top = "Your game, from the card";
         wrap("A game you copied to the microSD card.", lines, 3, 22);
+    } else if (row.kind == R_SECRETS) {
+        cartridge_picture(px, 0xFF4FD8);
+        top = "Five secrets";
+        wrap("Hints for each. Every one opens new colours; all five, a Solana tank.", lines, 3, 22);
+    } else if (row.kind == R_BOARD) {
+        cartridge_picture(px, 0xFFD040);
+        top = "Leaderboard";
+        wrap("The best Tank Siege scores of every badge. Needs Wi-Fi.", lines, 3, 22);
+    } else if (row.kind == R_SETTINGS) {
+        cartridge_picture(px, 0x8A8A96);
+        top = "Settings";
+        wrap("Screen size, LED glow, swap A and B.", lines, 3, 22);
+    } else if (row.kind == R_INFO) {
+        cartridge_picture(px, 0x14F195);
+        top = "About";
+        wrap("Pocket Arcade, and a QR to its maker on X.", lines, 3, 22);
+    } else if (row.kind == R_SHARE) {
+        cartridge_picture(px, 0x1D9BF0);
+        top = "Share on X";
+        wrap("A QR for your phone: X opens with the post and a picture.", lines, 3, 22);
     } else if (row.kind == R_HELP) {
         cartridge_picture(px, 0xFFB45C);
         top = "Keys and your own games";
@@ -918,6 +1077,34 @@ static void show_info(int r)
     }
 }
 
+// The Konami code on the list. The focused list takes UP and DOWN before
+// on_key, so the keys are read from sys_keys() each tick: a new press is a
+// key held now and not on the last tick.
+static const int32_t konami[8] = {KEY_UP, KEY_UP, KEY_DOWN, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LEFT, KEY_RIGHT};
+static int konami_at;
+static uint32_t list_keys_before;
+
+static void konami_watch(void)
+{
+    static const int32_t dirs[4] = {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT};
+    uint32_t k = sys_keys();
+    for (int i = 0; i < 4; i++) {
+        if (!KEY_HELD(k, dirs[i]) || KEY_HELD(list_keys_before, dirs[i])) {
+            continue;
+        }
+        if (dirs[i] == konami[konami_at]) {
+            konami_at++;
+        } else {
+            konami_at = dirs[i] == KEY_UP ? (konami_at == 2 ? 2 : 1) : 0;   // up up up down...: still on
+        }
+        if (konami_at == 8) {
+            konami_at = 0;
+            find_secret(S_IBRL);
+        }
+    }
+    list_keys_before = k;
+}
+
 static void list_selected(void *user, int index)
 {
     (void)user;
@@ -927,6 +1114,7 @@ static void list_selected(void *user, int index)
 static void show_list(void)
 {
     state = ST_LIST;
+    page_about = page_board = 0;
     sys_tick(30);
     led_off();
     clear_screen(COL_BG);
@@ -949,8 +1137,19 @@ static void show_list(void)
         list_rows[n_rows] = (ui_row){sd_name[i], row_sub[n_rows], NULL};
         n_rows++;
     }
+    snprintf(secrets_title, sizeof secrets_title, "Secrets %d/%d", secrets_found(), S_N);
+    rows[n_rows] = (row_t){R_SECRETS, 0};
+    list_rows[n_rows++] = (ui_row){secrets_title, "Hints: where to look", NULL};
+    rows[n_rows] = (row_t){R_BOARD, 0};
+    list_rows[n_rows++] = (ui_row){"Leaderboard", "Tank Siege, online", NULL};
+    rows[n_rows] = (row_t){R_SHARE, 0};
+    list_rows[n_rows++] = (ui_row){"Share on X", "Your Tank Siege best", NULL};
+    rows[n_rows] = (row_t){R_SETTINGS, 0};
+    list_rows[n_rows++] = (ui_row){"Settings", "Screen, LEDs, A/B", NULL};
     rows[n_rows] = (row_t){R_HELP, 0};
-    list_rows[n_rows++] = (ui_row){"How to play", "Keys, your own games", NULL};
+    list_rows[n_rows++] = (ui_row){"How to play", "START, menu, exit", NULL};
+    rows[n_rows] = (row_t){R_INFO, 0};
+    list_rows[n_rows++] = (ui_row){"About", "Made by @hypnogaba", NULL};
     rows[n_rows] = (row_t){R_ABOUT, 0};
     list_rows[n_rows++] = (ui_row){"Credits", "Who made the games", NULL};
 
@@ -989,13 +1188,13 @@ static void show_help(void)
     state = ST_PAGE;
     clear_screen(COL_BG);
     static const char *const lines[] = {
-        "D-pad          D-pad",
-        "SELECT         A",
-        "CANCEL         B",
-        "SELECT+CANCEL  START (tap both)",
-        "hold both 1 s  menu: SELECT, save,",
-        "               colours, screen, LEDs",
-        "HOME           leave (game is kept)",
+        "START: tap SELECT + CANCEL together",
+        "  (or menu > Press START): start, pause",
+        "Menu: hold SELECT + CANCEL 1 second:",
+        "  START, save, colours, exit to list",
+        "SELECT = A    CANCEL = B    D-pad",
+        "HOME: leave, the game is kept",
+        "Secrets: see Secrets in the list",
     };
     text(8, 4, "How to play", &(ui_label_opts){.size = 20, .color = COL_PURPLE});
     for (int i = 0; i < 7; i++) {
@@ -1009,6 +1208,257 @@ static void show_help(void)
     text(8, 144, msg, &(ui_label_opts){.size = 12, .color = COL_DIM});
     ui_hint("CANCEL back");
     storage_set_int("seen", 1);
+}
+
+// Our worker (server/): the leaderboard, and the page X shows for a shared post.
+#define SHARE_HOST "pocket-arcade.hypnogaba.workers.dev"
+
+// Settings, from the list (the game menu has the same per game).
+enum { SET_SCREEN, SET_GLOW, SET_SWAP, SET_N };
+static ui_row set_rows[SET_N];
+static char set_right[SET_N][24];
+static int set_pick = -1;
+
+static void set_selected(void *user, int index)
+{
+    (void)user;
+    set_pick = index;
+}
+
+static void settings_fill(void)
+{
+    snprintf(set_right[SET_SCREEN], sizeof set_right[0], "%s", big ? "full (1.5x)" : "small (1x)");
+    snprintf(set_right[SET_GLOW], sizeof set_right[0], "%s", glow ? "on" : "off");
+    snprintf(set_right[SET_SWAP], sizeof set_right[0], "%s", swap_ab ? "on" : "off");
+    set_rows[SET_SCREEN] = (ui_row){"Screen", "Game picture size", set_right[SET_SCREEN]};
+    set_rows[SET_GLOW] = (ui_row){"LED glow", "LEDs follow the picture", set_right[SET_GLOW]};
+    set_rows[SET_SWAP] = (ui_row){"Swap A and B", "SELECT = B, CANCEL = A", set_right[SET_SWAP]};
+}
+
+static void show_settings(void)
+{
+    state = ST_PAGE;
+    clear_screen(COL_BG);
+    settings_fill();
+    set_list = ui_list_rows(0, 0, UI_W, UI_H - 16, set_rows, SET_N, set_selected, NULL);
+    ui_hint("SELECT change   CANCEL back");
+}
+
+static void settings_do(int i)
+{
+    if (i == SET_SCREEN) {
+        big = !big;
+        storage_set_int("big", big);
+    } else if (i == SET_GLOW) {
+        glow = !glow;
+        storage_set_int("glow", glow);
+    } else if (i == SET_SWAP) {
+        swap_ab = !swap_ab;
+        storage_set_int("swap", swap_ab);
+    }
+    settings_fill();
+    ui_list_set_rows(set_list, set_rows, SET_N);
+    ui_list_select(set_list, i);
+}
+
+// About: who made it, and a QR to the maker on X.
+
+static void show_about(void)
+{
+    state = ST_PAGE;
+    clear_screen(COL_BG);
+    page_about = 1;
+    text(8, 4, "Pocket Arcade", &(ui_label_opts){.size = 20, .color = COL_PURPLE});
+    text(8, 32, "Game Boy player for the\nSolana Breakpoint badge.\n16 free games and Tank\nSiege, made for it.", &(ui_label_opts){.size = 12});
+    text(8, 104, "Made by @hypnogaba", &(ui_label_opts){.size = 14, .color = COL_YELLOW});
+    text(8, 124, "Scan: x.com/hypnogaba", &(ui_label_opts){.size = 12, .color = COL_DIM});
+    ui_obj q = ui_qr(170, 8, 140, "https://x.com/hypnogaba");
+    badge_obj_free(&q);
+    ui_hint("SELECT credits   CANCEL back");
+}
+
+// Leaderboard: the best Tank Siege scores, from our worker (server/). Every
+// request is signed by the badge server, so the board knows whose score it is.
+#define BOARD_URL "https://" SHARE_HOST
+
+static int json_int(const char *p, const char *key, int *out)
+{
+    const char *k = strstr(p, key);
+    if (!k) {
+        return 0;
+    }
+    *out = atoi(k + strlen(key));
+    return 1;
+}
+
+static void board_show(const char *body)
+{
+    if (!page_board || state != ST_PAGE) {
+        return;                         // the page was left before the answer came
+    }
+    const char *me = strstr(body, "\"me\":");
+    const char *p = body;
+    int row = 0;
+    while (row < BOARD_ROWS && (p = strstr(p, "\"n\":\"")) && (!me || p < me)) {
+        p += 5;
+        char name[20];
+        int n = 0;
+        while (*p && *p != '"' && n < 16) {
+            name[n++] = *p++;
+        }
+        name[n] = 0;
+        int sc = 0, st = 0;
+        json_int(p, "\"s\":", &sc);
+        json_int(p, "\"st\":", &st);
+        char line[48];
+        snprintf(line, sizeof line, "%d. %-16s %7d  st %d", row + 1, name, sc, st);
+        if (board_lbl[row].ref) {
+            ui_label_text(board_lbl[row], line);
+        }
+        row++;
+    }
+    char foot[48] = "No scores yet: play Tank Siege.";
+    int r = 0, sc = 0;
+    if (me && json_int(me, "\"r\":", &r) && json_int(me, "\"s\":", &sc)) {
+        snprintf(foot, sizeof foot, "You: #%d   %d", r, sc);
+    } else if (row) {
+        snprintf(foot, sizeof foot, "Play Tank Siege to get on it.");
+    }
+    if (board_lbl[BOARD_ROWS].ref) {
+        ui_label_text(board_lbl[BOARD_ROWS], foot);
+    }
+}
+
+static void board_answer(void *user, const http_response *res, const char *err)
+{
+    int sent = (int)(intptr_t)user;     // the score posted (0: just reading the board)
+    if (err || !res || res->status != 200) {
+        if (page_board && state == ST_PAGE && board_lbl[0].ref) {
+            ui_label_text(board_lbl[0], err && !strcmp(err, "offline") ? "Offline: join Wi-Fi to see the board."
+                                                                       : "The board didn't answer. SELECT to retry.");
+        }
+        return;
+    }
+    if (sent > storage_get_int("ts_sent", 0)) {
+        storage_set_int("ts_sent", sent);   // what the board has; a newer best is sent next time
+    }
+    static char body[2048];
+    http_body(res, body, sizeof body);
+    board_show(body);
+}
+
+// Sends the Tank Siege best if the board hasn't got it yet; the answer is the board.
+static int board_send(void)
+{
+    int hi = storage_get_int("ts_hi", 0);
+    if (hi <= 0 || hi <= storage_get_int("ts_sent", 0)) {
+        return 0;
+    }
+    char name[24];
+    if (badge_owner(name, sizeof name) <= 0) {
+        snprintf(name, sizeof name, "anon");
+    }
+    char js[96];
+    snprintf(js, sizeof js, "{\"score\":%d,\"stage\":%d,\"name\":\"%s\"}", hi,
+             storage_get_int("ts_st", 1) > 99 ? 99 : storage_get_int("ts_st", 1), name[0] == '@' ? name : "anon");
+    return http_post_json(BOARD_URL "/score", js, board_answer, (void *)(intptr_t)hi) == 0;
+}
+
+static void board_fetch(void)
+{
+    if (board_lbl[0].ref) {
+        ui_label_text(board_lbl[0], "Loading...");
+    }
+    if (!board_send()) {
+        http_get(BOARD_URL "/top?n=9", board_answer, NULL);
+    }
+}
+
+static void show_board(void)
+{
+    state = ST_PAGE;
+    clear_screen(COL_BG);
+    page_board = 1;
+    text(8, 4, "Tank Siege leaderboard", &(ui_label_opts){.size = 20, .color = COL_PURPLE});
+    for (int i = 0; i < BOARD_ROWS; i++) {
+        board_lbl[i] = ui_label(8, 32 + i * 15, "", &(ui_label_opts){.size = 12, .color = i < 3 ? COL_YELLOW : COL_TEXT});
+    }
+    board_lbl[BOARD_ROWS] = ui_label(8, 172, "", &(ui_label_opts){.size = 12, .color = COL_GREEN});
+    ui_hint("SELECT refresh   CANCEL back");
+    board_fetch();
+}
+
+static void show_secrets(void)
+{
+    state = ST_PAGE;
+    clear_screen(COL_BG);
+    char t[32];
+    snprintf(t, sizeof t, "Secrets %d/%d", secrets_found(), S_N);
+    text(8, 4, t, &(ui_label_opts){.size = 20, .color = COL_PURPLE});
+    for (int i = 0; i < S_N; i++) {
+        int got = (secret_bits >> i) & 1;
+        char name[32];
+        snprintf(name, sizeof name, "%s %s", got ? "+" : "?", secrets[i].name);
+        int y = 32 + i * 30;
+        text(8, y, name, &(ui_label_opts){.size = 12, .color = got ? COL_GREEN : COL_YELLOW});
+        text(20, y + 13, got ? secrets[i].how : secrets[i].hint,
+             &(ui_label_opts){.size = 12, .color = got ? COL_DIM : COL_TEXT});
+    }
+    text(8, 184, secrets_found() == S_N ? "All found: the Solana tank is yours." : "Each: new colours. All 5: a Solana tank.",
+         &(ui_label_opts){.size = 12, .color = COL_PINK});
+    ui_hint("CANCEL back");
+}
+
+
+static void url_add(char *out, size_t cap, const char *in)
+{
+    size_t n = strlen(out);
+    for (const unsigned char *c = (const unsigned char *)in; *c && n + 4 < cap; c++) {
+        if ((*c >= 'a' && *c <= 'z') || (*c >= 'A' && *c <= 'Z') || (*c >= '0' && *c <= '9') || strchr("-._~", *c)) {
+            out[n++] = (char)*c;
+        } else if (*c == ' ') {
+            out[n++] = '+';
+        } else {
+            n += (size_t)snprintf(out + n, cap - n, "%%%02X", *c);
+        }
+    }
+    out[n] = 0;
+}
+
+static char share_url[260];
+
+static void show_share(void)
+{
+    state = ST_PAGE;
+    clear_screen(COL_BG);
+    int hi = storage_get_int("ts_hi", 0), st = storage_get_int("ts_st", 1);
+    char post[140], link[96];
+    if (hi > 0) {
+        snprintf(post, sizeof post, "My Tank Siege best: %d, stage %d. Pocket Arcade on my Solana Breakpoint badge. @SolanaFndn", hi, st);
+    } else {
+        snprintf(post, sizeof post, "16 free games and a new tank game on my Solana Breakpoint badge: Pocket Arcade. @SolanaFndn");
+    }
+    snprintf(link, sizeof link, "https://" SHARE_HOST "/share?s=%d&st=%d", hi, st);
+    snprintf(share_url, sizeof share_url, "https://x.com/intent/post?text=");
+    url_add(share_url, sizeof share_url, post);
+    strncat(share_url, "&url=", sizeof share_url - strlen(share_url) - 1);
+    url_add(share_url, sizeof share_url, link);
+    text(8, 4, "Share on X", &(ui_label_opts){.size = 20, .color = COL_PURPLE});
+    char line[40];
+    snprintf(line, sizeof line, hi > 0 ? "Tank Siege %d" : "Pocket Arcade", hi);
+    text(8, 40, line, &(ui_label_opts){.size = 14, .color = COL_YELLOW});
+    if (hi > 0) {
+        snprintf(line, sizeof line, "stage %d", st);
+        text(8, 60, line, &(ui_label_opts){.size = 12, .color = COL_DIM});
+    }
+    text(8, 90, "Scan with your\nphone: X opens\nwith the post\nand a picture.", &(ui_label_opts){.size = 12, .color = COL_DIM});
+    badge_print(share_url);             // the simulator checks its length
+    ui_obj q = ui_qr(146, 8, 168, share_url);
+    if (!q.ref) {
+        text(146, 80, "Update Solana OS\nto show the QR", &(ui_label_opts){.size = 14, .color = COL_PINK});
+    }
+    badge_obj_free(&q);
+    ui_hint("CANCEL back");
 }
 
 static void show_credits(void)
@@ -1048,9 +1498,11 @@ static void credit_do(int i)
 
 void on_start(void)
 {
-    big = storage_get_int("big", 0);
+    big = storage_get_int("big", 1);           // full screen (1.5x) unless changed
     glow = storage_get_int("glow", 1);
     swap_ab = storage_get_int("swap", 0);
+    secret_bits = storage_get_int("sec", 0) & ((1 << S_N) - 1);
+    tk_set_skin(secrets_found() == S_N);
     int32_t n = fs_read("games/index.bin", index_buf, sizeof index_buf);
     n_games = n > 0 ? pack_index(index_buf, (uint32_t)n, games, PACK_MAX_GAMES) : -1;
     if (n_games < 0) {
@@ -1058,11 +1510,7 @@ void on_start(void)
         badge_print("Pocket Arcade: games/index.bin is missing or damaged");
     }
     files_list(found, NULL);
-    if (!storage_get_int("seen", 0)) {
-        show_help();
-        return;
-    }
-    show_list();
+    show_list();                          // the list first; How to play is a row in it
 }
 
 void on_tick(int32_t ms)
@@ -1080,6 +1528,16 @@ void on_tick(int32_t ms)
                 start_loading(1, row.idx, 0);
             } else if (row.kind == R_CONTINUE) {
                 start_loading(resume_sd, resume_idx, 1);
+            } else if (row.kind == R_SECRETS) {
+                show_secrets();
+            } else if (row.kind == R_SHARE) {
+                show_share();
+            } else if (row.kind == R_BOARD) {
+                show_board();
+            } else if (row.kind == R_SETTINGS) {
+                show_settings();
+            } else if (row.kind == R_INFO) {
+                show_about();
             } else if (row.kind == R_HELP) {
                 show_help();
             } else {
@@ -1087,6 +1545,7 @@ void on_tick(int32_t ms)
             }
             return;
         }
+        konami_watch();
         show_info(ui_list_selected(game_list));
         break;
     case ST_LOAD:
@@ -1103,6 +1562,11 @@ void on_tick(int32_t ms)
         }
         break;
     case ST_PAGE:
+        if (set_pick >= 0) {
+            int r = set_pick;
+            set_pick = -1;
+            settings_do(r);
+        }
         if (credit_pick >= 0) {
             int r = credit_pick;
             credit_pick = -1;
@@ -1114,7 +1578,17 @@ void on_tick(int32_t ms)
 
 int32_t on_key(int32_t key, int32_t repeat)
 {
-    (void)repeat;
+    if (key == KEY_SELECT && state == ST_PAGE && !repeat) {
+        if (page_about) {
+            page_about = 0;
+            show_credits();
+            return 1;
+        }
+        if (page_board) {
+            board_fetch();
+            return 1;
+        }
+    }
     if (key != KEY_BACK) {
         return state == ST_RUN;           // in a game every key is the game's
     }

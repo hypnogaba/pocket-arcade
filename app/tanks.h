@@ -29,3 +29,9 @@ const char *tk_check(void);                   // NULL, or what is wrong with the
 void tk_cheat(int what);                      // 1: destroy every enemy on the field, 2: the player and the base can't be hit
 int tk_cell(int x, int y);                    // the field: type << 4 | brick quarters
 void tk_load_stage(int stage);                // a stage, straight into play
+
+// For Pocket Arcade's secrets and share screen.
+int tk_level(void);                           // stars taken in this life, 0..3
+uint32_t tk_hi(void);                         // the high score in the battery RAM (0 before the first game)
+int tk_furthest(void);                        // the furthest stage reached
+void tk_set_skin(int solana);                 // 1: the player's tank in Solana purple (all secrets found)

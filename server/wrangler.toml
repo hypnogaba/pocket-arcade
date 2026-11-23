@@ -1,0 +1,9 @@
+name = "pocket-arcade"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+# Tank Siege leaderboard (signed badge requests) and the public X share page + card.
+[[d1_databases]]
+binding = "DB"
+database_name = "pocket-arcade-scores"
+database_id = "eb7261ae-4b5f-4d68-889b-5ce64ec08c20"

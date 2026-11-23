@@ -1074,6 +1074,8 @@ static const char *const tank_bm[5][16] = {
 
 // Track dark, track light, then a b c d.
 static const uint32_t pal_player[6] = {0x3A2C08, 0x7A6428, 0x7A5200, 0xD29A10, 0xFFD040, 0xFFF6C8};
+static const uint32_t pal_solana[6] = {0x15052E, 0x3A2A6A, 0x3A137A, 0x6B2FD9, 0xB58CFF, 0x14F195};
+static int skin_solana;                     // a setting, not game state: snapshots don't carry it
 static const uint32_t pal_silver[6] = {0x26262E, 0x5A5A66, 0x4A5060, 0x9098A8, 0xD0D6E0, 0xFFFFFF};
 static const uint32_t pal_red[6] = {0x3A1010, 0x6A2A2A, 0x701010, 0xC02828, 0xFF6060, 0xFFD0D0};
 static const uint32_t pal_armor[3][6] = {
@@ -1134,7 +1136,7 @@ static void draw_tank(int i)
     }
     int phase = (t->anim >> 1) & 3;
     if (i == 0) {
-        draw_tank_bm(t->x, t->y + FY, 0, t->dir, pal_player, phase);
+        draw_tank_bm(t->x, t->y + FY, 0, t->dir, skin_solana ? pal_solana : pal_player, phase);
         if (g.shield) {
             uint16_t c = (g.t & 2) ? COL(0xFFFFFF) : COL(0x60C8FF);
             for (int k = 0; k < 72; k++) {
@@ -1588,6 +1590,10 @@ int tk_tank(int i, int *x, int *y, int *dir)
 }
 
 int tk_lives(void) { return g.base_dead ? -g.base_dead : g.lives; }
+int tk_level(void) { return g.level; }
+uint32_t tk_hi(void) { return ram_ok() ? hi_score() : 0; }
+int tk_furthest(void) { return ram_ok() ? max_stage() : 1; }
+void tk_set_skin(int solana) { skin_solana = solana != 0; }
 int tk_cell(int x, int y) { return g.cell[y][x]; }
 
 void tk_cheat(int what)

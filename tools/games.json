@@ -52,17 +52,17 @@
    "sha256": "78cbb13080f587c108d8a18661db7d7b4a5c14c730f5bb86794a41132035fbf0"
   },
   {
-   "id": "snake",
-   "slug": "snake",
-   "rom": "snake.gb",
-   "title": "Snake",
-   "genre": "Classic",
-   "author": "Yvar de Goffau",
-   "license": "WTFPL",
-   "source": "github.com/Yvar-deGoffau/GBSnake",
-   "blurb": "The classic: eat, grow longer, don't bite your own tail.",
-   "shot": 900,
-   "sha256": "eda9a5a9455ed13e496abca8fff765122c0f79b624fab736b407fd68c29adf7e"
+   "id": "wyrm",
+   "slug": "wyrmhole",
+   "rom": "wyrmhole.gb",
+   "title": "Wyrmhole",
+   "genre": "Shooter",
+   "author": "quinnp",
+   "license": "MIT",
+   "source": "github.com/QuinnPainter/Wyrmhole",
+   "blurb": "A fast tunnel shooter: spin around the tube and blast what comes.",
+   "shot": 152,
+   "sha256": "a5e07f89119ee9c93aa50ec1ff828b2441781fa9b1a137f03af7b6c53ce03252"
   },
   {
    "id": "2048",
@@ -195,30 +195,30 @@
    "sha256": "079d161bf2bff4f3baec01339b4f6f02ff6f966c69456885a165b97aac11fa12"
   },
   {
-   "id": "dusky",
-   "slug": "dusky-dungeon",
-   "rom": "dusky-dungeon.gb",
-   "title": "Dusky Dungeon",
-   "genre": "Adventure",
-   "author": "invertedHat",
-   "license": "MIT, art CC BY 4.0",
-   "source": "github.com/inverted-hat/duskyDungeon",
-   "blurb": "Light the way through a dark dungeon full of traps.",
-   "shot": 2400,
-   "sha256": "e57c333cbddee9e47ee078936be9804a1d9fb95c3fd7a36d2689e26d526f4428"
+   "id": "postbot",
+   "slug": "postbot",
+   "rom": "postbot.gb",
+   "title": "PostBot",
+   "genre": "Puzzle",
+   "author": "Tobias Rojahn",
+   "license": "MIT",
+   "source": "github.com/MasterIV/PostBot",
+   "blurb": "Program a little robot to deliver all the mail.",
+   "shot": 400,
+   "sha256": "65824d3d7df8003f19923b38055a0660c20542cc363894091da661d9d49d13ad"
   },
   {
-   "id": "gbhack",
-   "slug": "gbhack",
-   "rom": "gbhack.gb",
-   "title": "GBHack",
-   "genre": "RPG",
-   "author": "statico",
+   "id": "squishy",
+   "slug": "squishy-the-turtle",
+   "rom": "squishy.gb",
+   "title": "Squishy the Turtle",
+   "genre": "Platform",
+   "author": "Cppchriscpp",
    "license": "MIT",
-   "source": "github.com/statico/gbhack",
-   "blurb": "A roguelike: 15 random dungeon floors, one life.",
-   "shot": 152,
-   "sha256": "f93a27e8b6272771bbba96105a2754f27ffc3f8317d71c063bdbd60dd0d74527"
+   "source": "github.com/potatolain/SquishyTheTurtle",
+   "blurb": "Grow and shrink at will to find all of Squishy's lost eggs.",
+   "shot": 400,
+   "sha256": "ac1e2eff95cdcf71ed931bd16c88f080038977b8b9dcde433bc023ee6b86c021"
   }
  ]
 }

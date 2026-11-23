@@ -25,6 +25,22 @@ own on the microSD card.
 
 The badge has no speaker, so the games are silent.
 
+## 0.3.0 (23 Nov 2026)
+
+- **Starts on the list**, with Secrets, Leaderboard, Share on X, Settings, How to play, About
+  (a QR to [@hypnogaba](https://x.com/hypnogaba)) and Credits as rows.
+- **START and exit said up front**: every game starts with a toast (tap SELECT+CANCEL = START,
+  hold both 1 s = menu and exit); How to play leads with it; the menu has "Press START".
+- **Full screen (1.5x) by default.** The Game Boy picture is 10:9, so 1.5x fills the height.
+- **Every game its own colours** instead of all green (the menu still changes them).
+- **5 secrets** with hints on where to look (Konami on the list, save + load a state, 5 games,
+  a flawless Tank Siege stage, 3 stars). Each opens a colour set (Gold, Neon, Mint, Ruby,
+  DoubleZero); all five give a Solana-purple tank.
+- **Tank Siege leaderboard online** and **share on X** with a picture card (server/: the
+  `pocket-arcade` worker, D1 `pocket-arcade-scores`, signed badge requests).
+- Swapped the three heaviest colour games (Snake, Dusky Dungeon, GBHack) for light original
+  Game Boy ones (Wyrmhole, PostBot, Squishy the Turtle): simple 8-bit pictures, less work a frame.
+
 ## Keys
 
 | Badge | Game Boy |
@@ -32,7 +48,7 @@ The badge has no speaker, so the games are silent.
 | D-pad | D-pad |
 | SELECT | A |
 | CANCEL | B |
-| SELECT + CANCEL, tap | START |
+| SELECT + CANCEL, tap | START (or the menu's Press START) |
 | SELECT + CANCEL, hold 1 s | the menu: SELECT button, save and load state, colours, screen, LEDs, A/B swap, restart, back to the list |
 | HOME | leave (the game is kept) |
 

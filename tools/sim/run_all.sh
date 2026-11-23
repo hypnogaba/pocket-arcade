@@ -18,6 +18,7 @@ run() { # name script [extra card setup already done]
 }
 fresh; cp roms/2048.gb "build/card/My 2048.gb"; run flow tools/sim/flow.json
 fresh; python3 tools/sim/make_bad_card.py build/card; run broken tools/sim/broken.json
+fresh; run secrets tools/sim/secrets.json
 for seed in 1 2 3 4 5; do
     fresh; python3 tools/sim/make_bad_card.py build/card; cp roms/2048.gb "build/card/My 2048.gb"
     python3 tools/sim/monkey.py $seed 1500 > build/monkey.json
