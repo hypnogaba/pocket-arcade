@@ -25,6 +25,24 @@ own on the microSD card.
 
 The badge has no speaker, so the games are silent.
 
+## 0.3.1 (24 Nov 2026)
+
+Fixes from Ivan's test of 0.3.0 on the badge:
+
+- **No more flicker at 1.5x.** The app scales the picture itself into two buffers in turn and
+  sends each with no copy; the badge's own scaling used one buffer, which the next frame
+  overwrote while the screen was still reading it.
+- **The menu opens when you hold SELECT + CANCEL**, paused or not. It used to close at once:
+  the held keys' repeats chose "Back to the game" or pressed CANCEL. Now it takes no key
+  until both are up. A key that drops out for a tick no longer turns the hold into START, and
+  the top LEDs fill up while you hold. "Exit to the game list" is the menu's second row.
+- **A + B together work in games**: SELECT and CANCEL pressed one after the other (hold B to
+  run, A to jump) go to the game as A + B instead of pausing it; two seconds of both still
+  open the menu.
+- **No green list**: each original Game Boy game starts in its own palette (Solana, Arcade,
+  Sunset or Night; Arcade lost its green background) and its preview is drawn in it. Tuff,
+  whose own Color colours are four greens, runs as an original Game Boy in Solana colours.
+
 ## 0.3.0 (23 Nov 2026)
 
 - **Starts on the list**, with Secrets, Leaderboard, Share on X, Settings, How to play, About
@@ -53,8 +71,9 @@ The badge has no speaker, so the games are silent.
 | D-pad | D-pad |
 | SELECT | A |
 | CANCEL | B |
-| SELECT + CANCEL, tap | START (or the menu's Press START) |
-| SELECT + CANCEL, hold 1 s | the menu: SELECT button, save and load state, colours, screen, LEDs, A/B swap, restart, back to the list |
+| SELECT + CANCEL together, tap | START (or the menu's Press START) |
+| SELECT + CANCEL together, hold 1 s (the LEDs fill up) | the menu: exit to the list, SELECT button, save and load state, colours, screen, LEDs, A/B swap, restart |
+| SELECT and CANCEL one after the other | A + B (two seconds of both: the menu) |
 | HOME | leave (the game is kept) |
 
 ## How it works

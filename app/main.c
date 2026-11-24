@@ -67,6 +67,14 @@ static int board_send(void);
 // Running
 static uint32_t acc_us, chord_ms, keys_before, save_check_ms;
 static int start_frames, select_frames, shown_count, chord_lock;
+// SELECT + CANCEL as one key: pressed together (within CHORD_TOGETHER_MS of
+// each other) they are START, held a second the menu. Pressed one after the
+// other (hold B to run, then A to jump) they stay A + B for the game. A key
+// that drops out for a tick or two doesn't end the chord.
+#define CHORD_TOGETHER_MS 150
+#define CHORD_GAP_MS 80
+static uint32_t run_ms, sel_at, back_at, chord_gap;
+static int chord_on, chord_lit;    // chord_lit: the LEDs show the hold, not the picture
 static uint32_t stat_t0, stat_frames, stat_shown, stat_emu_us;
 static uint32_t ram_sum, ram_seen, save_quiet_s;
 
@@ -449,24 +457,11 @@ static void tank_watch(void)
 }
 
 // Original Game Boy games are four shades of one colour; each bundled game
-// gets its own set so the list doesn't look all green (the menu changes it).
+// has its own set in the pack (tools/games.json "palette", its preview drawn
+// in it) so the list isn't all green. The menu changes it.
 static int default_palette(const pack_game *g)
 {
-    static const struct {
-        const char *id;
-        int pal;
-    } pick[] = {{"tobu", 2}, {"potion", 4}, {"alien", 3}, {"wyrm", 2}, {"2048", 4}, {"tuff", 2},
-                {"duel", 4}, {"lobster", 3}, {"zypher", 5}, {"pirate", 4}, {"rush", 3}, {"grub", 5},
-                {"pork", 5}, {"knight", 3}, {"slime", 2}, {"squishy", 3}};
-    if (g->palette) {
-        return g->palette;
-    }
-    for (unsigned i = 0; i < sizeof pick / sizeof pick[0]; i++) {
-        if (!strcmp(g->id, pick[i].id)) {
-            return pick[i].pal;
-        }
-    }
-    return 2;                           // Solana
+    return g->palette ? g->palette : 2;     // Solana
 }
 
 static void apply_palette(void)
@@ -482,19 +477,13 @@ static int open_game(void)
     if (cur.native) {
         return emu_open_native(&tk_machine);
     }
+    emu_force_dmg(!cur.sd && (games[cur.idx].flags & PACK_DMG));
     return cur.paged ? emu_open_paged(rom_size, card_rd, NULL, cache, load_pos) : emu_open_mem(rom, rom_size);
 }
 
 static void begin_run(void)
 {
-    int e;
-    if (cur.native) {
-        e = open_game();
-    } else if (cur.paged) {
-        e = emu_open_paged(rom_size, card_rd, NULL, cache, (uint32_t)(load_pos));
-    } else {
-        e = emu_open_mem(rom, rom_size);
-    }
+    int e = open_game();
     if (e) {
         fail_screen(e == EMU_BAD_HEADER ? "That isn't a Game Boy game (bad header)."
                                         : "This cartridge type isn't supported.");
@@ -515,7 +504,8 @@ static void begin_run(void)
     clear_screen(COL_BLACK);
     leds_game();
     acc_us = chord_ms = keys_before = save_check_ms = 0;
-    chord_lock = 0;
+    run_ms = sel_at = back_at = chord_gap = 0;
+    chord_lock = chord_on = chord_lit = 0;
     save_quiet_s = 0;
     ram_seen = ram_sum;
     start_frames = select_frames = shown_count = 0;
@@ -658,13 +648,8 @@ static void load_tick(void)
 static uint8_t joypad(uint32_t k)
 {
     int s = KEY_HELD(k, KEY_SELECT), c = KEY_HELD(k, KEY_BACK);
-    if (s && c) {
-        chord_lock = 1;                 // the chord is START (or the menu), not A + B
-    } else if (!s && !c) {
-        chord_lock = 0;
-    }
     if (chord_lock) {
-        s = c = 0;                      // until both are up: letting go one by one isn't A or B
+        s = c = 0;                      // a chord, until both are up: letting go one by one isn't A or B
     }
     int a = swap_ab ? c : s, b = swap_ab ? s : c;
     uint8_t p = 0;                      // bits: A B SELECT START RIGHT LEFT UP DOWN
@@ -679,34 +664,127 @@ static uint8_t joypad(uint32_t k)
     return (uint8_t)~p;                 // the Game Boy's are active low
 }
 
+// 1.5x (240 x 216, the app area's height) scaled here, nearest, into two
+// buffers in turn: an unscaled big-endian frame in a 64-byte-aligned buffer
+// goes to the screen with no copy, and the next ui_frame waits for the last.
+// Left to the badge, a scaled frame is converted into one buffer of its own
+// while the screen may still be reading the last one: the picture flickered.
+#define BIG_W 240
+#define BIG_H 216
+static uint16_t big_fb[2][BIG_W * BIG_H] __attribute__((aligned(64)));
+static int big_i;
+
+static void scale_big(const uint16_t *s, uint16_t *d)
+{
+    for (int sy = 0; sy < EMU_H; sy++) {
+        const uint16_t *r = s + sy * EMU_W;
+        uint16_t *o = d;
+        for (int sx = 0; sx < EMU_W; sx += 2) {   // pixels a b -> a a b
+            uint16_t a = r[sx], b = r[sx + 1];
+            o[0] = a;
+            o[1] = a;
+            o[2] = b;
+            o += 3;
+        }
+        d += BIG_W;
+        if (!(sy & 1)) {                // rows likewise: even ones twice
+            memcpy(d, d - BIG_W, BIG_W * 2);
+            d += BIG_W;
+        }
+    }
+}
+
 static void show_frame(const uint16_t *px)
 {
-    int r = big ? ui_frame(px, EMU_W, EMU_H, 40, 1, 240, 216, UI_FRAME_BE)
-                : ui_frame(px, EMU_W, EMU_H, 80, 37, EMU_W, EMU_H, UI_FRAME_BE);
+    int r;
+    if (big) {
+        scale_big(px, big_fb[big_i]);
+        r = ui_frame(big_fb[big_i], BIG_W, BIG_H, 40, 1, BIG_W, BIG_H, UI_FRAME_BE);
+        big_i ^= 1;
+    } else {
+        r = ui_frame(px, EMU_W, EMU_H, 80, 37, EMU_W, EMU_H, UI_FRAME_BE);
+    }
     stat_shown += r > 0;
-    if (glow && ++shown_count % 8 == 0) {
+    if (glow && !chord_lit && ++shown_count % 8 == 0) {
         led_glow(px);
     }
+}
+
+// While SELECT + CANCEL are held, the top LEDs fill up: all six, the menu.
+static void chord_leds(uint32_t need)
+{
+    int n = (int)(chord_ms * 6 / need);
+    chord_lit = 1;
+    for (int i = 0; i < 6; i++) {
+        if (i <= n) {
+            led_set(i, 181, 140, 255);
+        } else {
+            led_set(i, 0, 0, 0);
+        }
+    }
+}
+
+// SELECT + CANCEL: START, the menu (1) or nothing (0). Pressed together they
+// are START tapped and the menu held a second. Pressed one after the other
+// (B held to run, then A to jump) the game gets A + B, and only two seconds
+// of both opens the menu, so there is always a way out.
+static int chord_tick(uint32_t k, int32_t ms)
+{
+    int s = KEY_HELD(k, KEY_SELECT), c = KEY_HELD(k, KEY_BACK);
+    run_ms += (uint32_t)ms;
+    if (s && !KEY_HELD(keys_before, KEY_SELECT)) {
+        sel_at = run_ms;
+    }
+    if (c && !KEY_HELD(keys_before, KEY_BACK)) {
+        back_at = run_ms;
+    }
+    keys_before = k;
+    int menu = 0;
+    if (s && c) {
+        uint32_t apart = sel_at > back_at ? sel_at - back_at : back_at - sel_at;
+        if (!chord_on && !chord_lock && apart <= CHORD_TOGETHER_MS) {
+            chord_on = chord_lock = 1;
+        }
+        chord_gap = 0;
+        chord_ms += (uint32_t)ms;
+        uint32_t need = chord_on ? 1000 : 2000;
+        if (chord_ms >= need) {
+            chord_on = 0;
+            chord_ms = 0;
+            chord_lock = 1;             // back in the game, letting go isn't A or B
+            menu = 1;
+        } else if (chord_on || chord_ms >= 500) {
+            chord_leds(need);
+        }
+    } else if (chord_ms) {
+        // A key that drops out for a tick doesn't end a chord. Pressed apart
+        // it ends at once: A tapped fast while B is held must not add up.
+        chord_gap += (uint32_t)ms;
+        if (!chord_on || chord_gap >= CHORD_GAP_MS) {
+            if (chord_on) {
+                start_frames = 6;       // a tap of both: START
+            }
+            chord_on = 0;
+            chord_ms = 0;
+            if (chord_lit) {
+                chord_lit = 0;
+                leds_game();
+            }
+        }
+    }
+    if (!s && !c) {
+        chord_lock = 0;
+    }
+    return menu;
 }
 
 static void run_tick(int32_t ms)
 {
     uint32_t k = sys_keys();
-    int chord = KEY_HELD(k, KEY_SELECT) && KEY_HELD(k, KEY_BACK);
-    int was = KEY_HELD(keys_before, KEY_SELECT) && KEY_HELD(keys_before, KEY_BACK);
-    if (chord) {
-        chord_ms += (uint32_t)ms;
-        if (chord_ms >= 1000) {
-            chord_ms = 0;
-            keys_before = k;
-            open_menu();
-            return;
-        }
-    } else if (was && chord_ms) {
-        start_frames = 6;               // a tap of both: START
-        chord_ms = 0;
+    if (chord_tick(k, ms)) {
+        open_menu();
+        return;
     }
-    keys_before = k;
 
     acc_us += (uint32_t)ms * 1000;
     if (acc_us > 4 * FRAME_US) {
@@ -783,16 +861,18 @@ static void leave_game(int to_list)
 // ---------------------------------------------------------------------------
 // The menu (SELECT + CANCEL held a second)
 
-enum { M_RESUME, M_START, M_SELECT, M_SAVE, M_LOAD, M_COLOURS, M_SCREEN, M_GLOW, M_SWAP, M_RESET, M_LIST, M_N };
-static int menu_ids[M_N], menu_n, menu_pick = -1;
+enum { M_RESUME, M_LIST, M_START, M_SELECT, M_SAVE, M_LOAD, M_COLOURS, M_SCREEN, M_GLOW, M_SWAP, M_RESET, M_N };
+// The menu opens while SELECT and CANCEL are still held: their key repeats
+// would pick a row or close it at once, so it takes no key until both are up.
+static int menu_ids[M_N], menu_n, menu_pick = -1, menu_armed;
 static char menu_right[M_N][24];
 static ui_row menu_rows[M_N];
 
 static void menu_fill(void)
 {
-    static const char *const titles[M_N] = {"Back to the game", "Press START", "Press SELECT", "Save state",
-                                            "Load state", "Colours", "Screen", "LED glow", "Swap A and B",
-                                            "Restart the game", "Save and go to the list"};
+    static const char *const titles[M_N] = {"Back to the game", "Exit to the game list", "Press START",
+                                            "Press SELECT", "Save state", "Load state", "Colours", "Screen",
+                                            "LED glow", "Swap A and B", "Restart the game"};
     menu_n = 0;
     for (int i = 0; i < M_N; i++) {
         if (i == M_COLOURS && emu_is_cgb()) {
@@ -822,6 +902,8 @@ static void menu_selected(void *user, int index)
 static void open_menu(void)
 {
     state = ST_MENU;
+    menu_armed = 0;
+    menu_pick = -1;
     save_battery(1);
     clear_screen(COL_BG);
     menu_fill();
@@ -837,6 +919,9 @@ static void back_to_game(void)
     acc_us = 0;
     keys_before = sys_keys();
     chord_ms = 0;
+    chord_on = chord_lit = 0;
+    chord_lock = KEY_HELD(keys_before, KEY_SELECT) || KEY_HELD(keys_before, KEY_BACK);   // their release isn't A or B
+    leds_game();
     sys_tick(16);
     state = ST_RUN;
 }
@@ -1555,6 +1640,12 @@ void on_tick(int32_t ms)
         run_tick(ms);
         break;
     case ST_MENU:
+        if (!menu_armed) {
+            uint32_t k = sys_keys();
+            menu_armed = !KEY_HELD(k, KEY_SELECT) && !KEY_HELD(k, KEY_BACK);
+            menu_pick = -1;             // a repeat of the held SELECT isn't a choice
+            break;
+        }
         if (menu_pick >= 0) {
             int r = menu_pick;
             menu_pick = -1;
@@ -1596,7 +1687,9 @@ int32_t on_key(int32_t key, int32_t repeat)
     case ST_RUN:
         return 1;                         // CANCEL is B
     case ST_MENU:
-        back_to_game();
+        if (menu_armed && !repeat) {
+            back_to_game();
+        }
         return 1;
     case ST_PAGE:
     case ST_ERROR:

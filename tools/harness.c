@@ -1,7 +1,7 @@
 // harness.c: runs a Game Boy ROM through app/emu.c on a computer, with no
 // badge: presses keys from a script, saves screenshots, times the core.
 //
-//   harness <rom> <outdir> [frames] [script] [palette]
+//   harness <rom> <outdir> [frames] [script] [palette] [dmg]
 //
 // script: comma-separated "frame:keys:len" presses, keys from "abseudlr"
 // (A B Select start(e) Up Down Left Right). Without one, a default that gets
@@ -118,6 +118,7 @@ int main(int argc, char **argv)
     }
     fclose(f);
 
+    emu_force_dmg(argc > 6 && !strcmp(argv[6], "dmg"));
     int e = emu_open_mem(rom, cap);
     if (e) {
         printf("{\"error\":\"open %d\"}\n", e);

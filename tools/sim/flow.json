@@ -74,9 +74,31 @@
   "log": "the menu"
  },
  {
-  "tick": 70,
+  "tick": 1,
+  "ms": 16
+ },
+ {
+  "tick": 30,
   "ms": 16,
   "hold": "select,back"
+ },
+ {
+  "tick": 1,
+  "ms": 16
+ },
+ {
+  "log": "a key that drops out for a tick doesn't restart the second"
+ },
+ {
+  "tick": 40,
+  "ms": 16,
+  "hold": "select,back"
+ },
+ {
+  "log": "the menu opened with both still held: their repeats don't close it"
+ },
+ {
+  "key": "back"
  },
  {
   "tick": 1,
@@ -89,7 +111,7 @@
  },
  {
   "tick": 1,
-  "expect": "Sunset"
+  "expect": "Classic green"
  },
  {
   "select_row": "Save state"
@@ -104,7 +126,654 @@
  {
   "tick": 60,
   "ms": 16,
-  "shot": "07-alien-grey"
+  "shot": "07-alien-green"
+ },
+ {
+  "log": "B held, then A: the game gets A + B; two seconds of both still open the menu"
+ },
+ {
+  "tick": 10,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 100,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 1,
+  "ms": 16,
+  "hold": "back,select",
+  "absent": "Back to the game"
+ },
+ {
+  "tick": 40,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 1,
+  "expect": "Back to the game"
+ },
+ {
+  "key": "back"
+ },
+ {
+  "tick": 1,
+  "absent": "Back to the game"
+ },
+ {
+  "log": "B held and A tapped fast for 6 s: never the menu"
+ },
+ {
+  "tick": 10,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back,select"
+ },
+ {
+  "tick": 3,
+  "ms": 16,
+  "hold": "back"
+ },
+ {
+  "tick": 1,
+  "absent": "Back to the game"
  },
  {
   "log": "HOME, then open the app again: Continue is first"
@@ -135,6 +804,10 @@
   "log": "load the state saved in the menu"
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
@@ -151,12 +824,16 @@
   "log": "back to the list, a Color game"
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
  },
  {
-  "select_row": "Save and go to the list"
+  "select_row": "Exit to the game list"
  },
  {
   "tick": 2,
@@ -181,6 +858,10 @@
   "tick": 2,
   "ms": 16,
   "absent": "SELECT play"
+ },
+ {
+  "tick": 1,
+  "ms": 16
  },
  {
   "tick": 70,
@@ -208,6 +889,10 @@
   "shot": "11-tobu-small"
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
@@ -216,7 +901,7 @@
   "select_row": "Screen"
  },
  {
-  "select_row": "Save and go to the list"
+  "select_row": "Exit to the game list"
  },
  {
   "log": "Tank Siege, the game written for the badge"
@@ -276,6 +961,10 @@
   "leds": true
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
@@ -300,6 +989,10 @@
   "tick": 20,
   "ms": 16,
   "absent": "No saved state"
+ },
+ {
+  "tick": 1,
+  "ms": 16
  },
  {
   "tick": 70,
@@ -330,12 +1023,16 @@
   "absent": "Couldn't continue"
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
  },
  {
-  "select_row": "Save and go to the list"
+  "select_row": "Exit to the game list"
  },
  {
   "tick": 2,
@@ -401,12 +1098,16 @@
   "shot": "13-card-game"
  },
  {
+  "tick": 1,
+  "ms": 16
+ },
+ {
   "tick": 70,
   "ms": 16,
   "hold": "select,back"
  },
  {
-  "select_row": "Save and go to the list"
+  "select_row": "Exit to the game list"
  },
  {
   "tick": 2,

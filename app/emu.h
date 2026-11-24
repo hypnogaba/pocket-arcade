@@ -42,6 +42,9 @@ extern const emu_palette emu_palettes[];
 extern const int emu_n_palettes;
 #define EMU_BASE_PALETTES 6        // always open; the rest open one per secret found (main.c)
 void emu_set_palette(int i);
+// The next game opened runs as an original Game Boy even if it could use
+// the Color's colours (its own may be just four greens): 1 on, 0 off.
+void emu_force_dmg(int on);
 
 // Battery RAM.
 uint8_t *emu_cart_ram(uint32_t *size);

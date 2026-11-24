@@ -1,5 +1,5 @@
 {
- "_about": "The games bundled with Pocket Arcade. Every one is free software or freely licensed: licence checked in its own repository on 2026-11-23. rom: the file from Homebrew Hub (gbdev/database). shot: the harness frame used as the preview. Order here is the order in the app.",
+ "_about": "The games bundled with Pocket Arcade. Every one is free software or freely licensed: licence checked in its own repository on 2026-11-23. rom: the file from Homebrew Hub (gbdev/database). shot: the harness frame used as the preview. Order here is the order in the app. palette: the colours an original Game Boy game starts in (app/emu.c emu_palettes: 2 Solana, 3 Arcade, 4 Sunset, 5 Night); the preview is rendered in them. dmg: a Color-compatible game whose own colours are green, run as an original Game Boy so it takes the palette.",
  "games": [
   {
    "id": "tanks",
@@ -36,7 +36,9 @@
    "source": "github.com/BonsaiDen/Tuff.gb",
    "blurb": "A tiny hero in a big cave world. Run, jump, swim, explore.",
    "shot": 900,
-   "sha256": "ca28220f7f04460cef5d652a6298989ff00efe92e2a08a67f874bc865d98f7a6"
+   "sha256": "ca28220f7f04460cef5d652a6298989ff00efe92e2a08a67f874bc865d98f7a6",
+   "palette": 2,
+   "dmg": true
   },
   {
    "id": "tobu",
@@ -62,7 +64,8 @@
    "source": "github.com/potatolain/SquishyTheTurtle",
    "blurb": "Grow and shrink at will to find all of Squishy's lost eggs.",
    "shot": 400,
-   "sha256": "ac1e2eff95cdcf71ed931bd16c88f080038977b8b9dcde433bc023ee6b86c021"
+   "sha256": "ac1e2eff95cdcf71ed931bd16c88f080038977b8b9dcde433bc023ee6b86c021",
+   "palette": 4
   },
   {
    "id": "slime",
@@ -88,7 +91,8 @@
    "source": "github.com/NiliusJulius/Alien-Invasion",
    "blurb": "Rows of invaders march down. Shoot them before they land.",
    "shot": 900,
-   "sha256": "78cbb13080f587c108d8a18661db7d7b4a5c14c730f5bb86794a41132035fbf0"
+   "sha256": "78cbb13080f587c108d8a18661db7d7b4a5c14c730f5bb86794a41132035fbf0",
+   "palette": 5
   },
   {
    "id": "wyrm",
@@ -101,7 +105,8 @@
    "source": "github.com/QuinnPainter/Wyrmhole",
    "blurb": "A fast tunnel shooter: spin around the tube and blast what comes.",
    "shot": 152,
-   "sha256": "a5e07f89119ee9c93aa50ec1ff828b2441781fa9b1a137f03af7b6c53ce03252"
+   "sha256": "a5e07f89119ee9c93aa50ec1ff828b2441781fa9b1a137f03af7b6c53ce03252",
+   "palette": 2
   },
   {
    "id": "zypher",
@@ -114,7 +119,8 @@
    "source": "github.com/PixelPhobicGames/Zypher",
    "blurb": "A side-scrolling shooter: send the alien fleet back home.",
    "shot": 900,
-   "sha256": "1baa54454a61ebb0fef8b34dbd07785d556eb35f381c7b39d7d56f37b034ab81"
+   "sha256": "1baa54454a61ebb0fef8b34dbd07785d556eb35f381c7b39d7d56f37b034ab81",
+   "palette": 5
   },
   {
    "id": "duel",
@@ -127,7 +133,8 @@
    "source": "github.com/ajgalan/el-dueloroso",
    "blurb": "Saloon shootout: hit the outlaws, spare the folks.",
    "shot": 900,
-   "sha256": "21b8c78aec985c9c9335db154b186adde9e2aaba32fc7ed76c9cf37cb8ffcf3c"
+   "sha256": "21b8c78aec985c9c9335db154b186adde9e2aaba32fc7ed76c9cf37cb8ffcf3c",
+   "palette": 4
   },
   {
    "id": "pirate",
@@ -140,7 +147,8 @@
    "source": "github.com/MWehrstedt/MaxPirateExtra",
    "blurb": "Smash zombies with your anchor and your cannon, Bessie.",
    "shot": 2400,
-   "sha256": "11320e82aea34d56c3b8b5cabd3c15122ff0bbb281ec397d39b3f80a0bda688c"
+   "sha256": "11320e82aea34d56c3b8b5cabd3c15122ff0bbb281ec397d39b3f80a0bda688c",
+   "palette": 3
   },
   {
    "id": "knight",
@@ -166,7 +174,8 @@
    "source": "github.com/QuinnPainter/Renegade-Rush",
    "blurb": "You pulled off the heist. Smash the cop cars and get away.",
    "shot": 900,
-   "sha256": "0511a3de1bb59a5bd8bcf4e1463df7ea03a2aae66f30542b85ee51aa25f527a6"
+   "sha256": "0511a3de1bb59a5bd8bcf4e1463df7ea03a2aae66f30542b85ee51aa25f527a6",
+   "palette": 3
   },
   {
    "id": "lobster",
@@ -179,7 +188,8 @@
    "source": "github.com/tbsp/shock-lobster",
    "blurb": "A magic lobster zips and zaps through an undersea quest.",
    "shot": 1500,
-   "sha256": "f14efd0340903b1b00d7e8b4b39687d4bc33355ac7742267ccfddfe92f54a611"
+   "sha256": "f14efd0340903b1b00d7e8b4b39687d4bc33355ac7742267ccfddfe92f54a611",
+   "palette": 3
   },
   {
    "id": "grub",
@@ -192,7 +202,8 @@
    "source": "github.com/Exetric/GrubGlide",
    "blurb": "Glide a grub through rings in the clouds. One more go!",
    "shot": 900,
-   "sha256": "7cb3d8ae5dd5d042436982f0e78a5daab4d99620eb50adb260cab9b37221b9c0"
+   "sha256": "7cb3d8ae5dd5d042436982f0e78a5daab4d99620eb50adb260cab9b37221b9c0",
+   "palette": 5
   },
   {
    "id": "pork",
@@ -205,7 +216,8 @@
    "source": "github.com/binji/porklike.gb",
    "blurb": "Dig down a dungeon full of pigs. Every run is new.",
    "shot": 1500,
-   "sha256": "d4ee86833a580c92aa789aef03407b90a6cc6eb27e70d3477c41c970d0cf3f11"
+   "sha256": "d4ee86833a580c92aa789aef03407b90a6cc6eb27e70d3477c41c970d0cf3f11",
+   "palette": 5
   },
   {
    "id": "2048",
@@ -218,7 +230,8 @@
    "source": "github.com/Sanqui/2048-gb",
    "blurb": "Slide the tiles, merge the numbers, reach 2048.",
    "shot": 2400,
-   "sha256": "3ea2376b15b34bd26b10e6b31d2753bf8b086098dbdb5ee84d9c0f03d66d3d7f"
+   "sha256": "3ea2376b15b34bd26b10e6b31d2753bf8b086098dbdb5ee84d9c0f03d66d3d7f",
+   "palette": 4
   }
  ]
 }

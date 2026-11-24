@@ -134,13 +134,14 @@ int main(int argc, char **argv)
         if (!pv) {
             write_ppm(p, fb);
         }
+        emu_force_dmg((g->flags & PACK_DMG) != 0);
         int e = emu_open_mem(rom, size);
         int frames_ok = !e;
         for (int f = 0; f < 600 && frames_ok; f++) {
             emu_frame(0xFF, f % 10 ? NULL : fb);
             frames_ok = !emu_error();
         }
-        int cgb_flag = (g->flags & PACK_CGB) != 0;
+        int cgb_flag = (g->flags & (PACK_CGB | PACK_DMG)) != 0;   // run as an original: still a Color header
         int cgb_hdr = rom[0x143] == 0x80 || rom[0x143] == 0xC0;
         // a snapshot taken now and loaded back draws the same next frame
         static uint8_t st[300000];

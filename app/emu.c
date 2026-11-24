@@ -1,4 +1,5 @@
 // emu.c: Walnut-CGB (walnut/, MIT) wrapped for Pocket Arcade. See emu.h.
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -168,8 +169,8 @@ const emu_palette emu_palettes[] = {
     {"Solana", {{0xF6F1FF, 0xB58CFF, 0x6B2FD9, 0x15052E},
                 {0xEAFFF6, 0x14F195, 0x0B8A57, 0x00241A},
                 {0xFFF4E6, 0xFFB45C, 0xC2470E, 0x2A0B00}}},
-    {"Arcade", {{0xFFFFFF, 0x7BFF31, 0x0063C5, 0x000000},
-                {0xFFFFFF, 0xFF8484, 0x943A3A, 0x000000},
+    {"Arcade", {{0xFFFFFF, 0xFF8484, 0x943A3A, 0x000000},
+                {0xFFFFFF, 0x63A5FF, 0x0000FF, 0x000000},
                 {0xFFFFFF, 0xFFD54F, 0xB86E00, 0x000000}}},
     {"Sunset", {{0xFFF0D8, 0xF7A86B, 0xA8435F, 0x2B1035},
                 {0xFFF0D8, 0xFFD36B, 0xD9572B, 0x2B1035},
@@ -212,6 +213,10 @@ void emu_set_palette(int i)
 // ---------------------------------------------------------------------------
 // Opening
 
+static int force_dmg;
+
+void emu_force_dmg(int on) { force_dmg = on; }
+
 static int finish_open(uint8_t (*r8)(struct gb_s *, const uint_fast32_t),
                        uint16_t (*r16)(struct gb_s *, const uint_fast32_t),
                        uint32_t (*r32)(struct gb_s *, const uint_fast32_t))
@@ -228,6 +233,10 @@ static int finish_open(uint8_t (*r8)(struct gb_s *, const uint_fast32_t),
     }
     if (e != GB_INIT_NO_ERROR) {
         return EMU_BAD_MBC;
+    }
+    if (force_dmg && gb.cgb.cgbMode) {
+        gb.cgb.cgbMode = 0;             // the registers at start tell the game it's an original Game Boy
+        gb_reset(&gb);
     }
     gb_init_lcd(&gb, draw_line);
     size_t rs = 0;
@@ -404,6 +413,13 @@ int emu_state_load(const uint8_t *src, uint32_t len, uint32_t game_crc)
     }
     if (h.magic != STATE_MAGIC || h.gb_size != sizeof gb || h.ram_size != ram_size || h.game_crc != game_crc ||
         h.build != STATE_BUILD || len != sizeof h + sizeof gb + ram_size) {
+        return -1;
+    }
+    // A snapshot from the other mode (Tuff before it ran as an original Game
+    // Boy, say) would bring that mode back: refused, the game starts fresh.
+    __typeof__(gb.cgb.cgbMode) mode;
+    memcpy(&mode, src + sizeof h + offsetof(struct gb_s, cgb.cgbMode), sizeof mode);
+    if (mode != gb.cgb.cgbMode) {
         return -1;
     }
     struct gb_s keep = gb;

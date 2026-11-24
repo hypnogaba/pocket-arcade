@@ -20,7 +20,7 @@ p<N>.bin    the games' blobs, each: (banks + 1) u32 offsets from the blob's
 
 Every pack stays under the store's 256 KB a file; the folder under 1 MB.
 """
-import json, os, struct, sys, zlib
+import subprocess, json, os, struct, sys, zlib
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -53,6 +53,22 @@ def preview(path):
     px = bytes(idx[c] for c in im.getdata())
     out = struct.pack('<H', len(colours)) + b''.join(rgb565_be(*c) for c in colours) + deflate(px)
     return out
+
+def coloured_shot(g):
+    """The preview of an original Game Boy game in the colours it starts in
+    (games.json "palette"): the harness again, same frame, that palette.
+    "dmg": a Color-compatible game run as an original Game Boy (app/emu.c
+    emu_force_dmg), so in these colours too."""
+    out = os.path.join(ROOT, 'build', 'preview', g['id'])
+    os.makedirs(out, exist_ok=True)
+    rom = os.path.join(ROOT, 'roms', g['rom'])
+    r = subprocess.run([os.path.join(ROOT, 'build', 'harness'), rom, out, str(g['shot'] + 4), '', str(g['palette'])]
+                       + (['dmg'] if g.get('dmg') else []),
+                       capture_output=True, text=True, timeout=300)
+    shot = os.path.join(out, 'f%05d.ppm' % g['shot'])
+    if r.returncode or not os.path.exists(shot):
+        raise SystemExit(f"{g['id']}: the harness made no preview: {r.stdout[-200:]}{r.stderr[-200:]}")
+    return shot
 
 def wrap_lines(text, width=22):
     """The lines app/main.c's wrap() makes of a blurb (the list shows 3)."""
@@ -121,8 +137,12 @@ def main():
             rom = open(os.path.join(romdir, g['rom']), 'rb').read()
             blob, banks, crc, padded = rom_blob(rom)
             shot = os.path.join(ROOT, 'build', 'survey', g['slug'], 'f%05d.ppm' % g['shot'])
+            if g.get('palette'):
+                if padded[0x143] in (0x80, 0xC0) and not g.get('dmg'):
+                    raise SystemExit(f"{g['id']}: a Color game sets its own colours; \"palette\" needs \"dmg\"")
+                shot = coloured_shot(g)
             prev = preview(shot)
-            flags = 1 if padded[0x143] in (0x80, 0xC0) else 0
+            flags = 4 if g.get('dmg') else 1 if padded[0x143] in (0x80, 0xC0) else 0
         need = len(blob) + len(prev)
         if need > PACK_MAX:
             raise SystemExit(f"{g['id']} is {need} bytes packed: more than one file can hold")
